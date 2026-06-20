@@ -1,0 +1,19 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: mcp-server-currency
+  ai:
+    mcp:
+      server:
+        protocol: STREAMABLE        # streamable-HTTP transport (replaces SSE)
+        type: SYNC                  # synchronous, WebMVC
+        name: currency-tools
+        version: 0.0.1
+        streamable-http:
+          mcp-endpoint: /mcp        # tools served at http://localhost:8081/mcp
+
+logging:
+  level:
+    org.springframework.ai: INFO

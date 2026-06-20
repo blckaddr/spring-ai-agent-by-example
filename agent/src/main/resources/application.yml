@@ -1,0 +1,30 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: agent
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+        # Model is config, never hardcoded. Override with AGENT_MODEL env var.
+        # Must be a TOOL-CAPABLE model (see docs/adr/0002).
+        model: ${AGENT_MODEL:llama3.1:8b}
+        temperature: 0.1            # low temp → more deterministic tool use
+    mcp:
+      client:
+        type: SYNC
+        name: agent
+        toolcallback:
+          enabled: true             # surface remote MCP tools as ToolCallbacks
+        streamable-http:
+          connections:
+            currency:
+              url: http://localhost:8081
+              endpoint: /mcp
+
+logging:
+  level:
+    com.example.agent: INFO
+    org.springframework.ai: INFO
