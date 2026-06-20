@@ -57,6 +57,12 @@ public class RecordingToolCallback implements ToolCallback {
 
     private String invoke(String toolInput, ToolContext toolContext) {
         String tool = getToolDefinition().name();
+        // Phase 4 safety cap: refuse to run more tool steps than allowed in one run.
+        StepCollector current = StepCapture.current();
+        if (current != null && current.stepCount() >= current.maxSteps()) {
+            throw new LoopLimitExceededException(
+                    "max steps (" + current.maxSteps() + ") reached for this run");
+        }
         long startNanos = System.nanoTime();
         String result = null;
         String error = null;

@@ -11,6 +11,20 @@ public class StepCollector {
 
     private final List<Step> steps = new CopyOnWriteArrayList<>();
     private final AtomicInteger counter = new AtomicInteger();
+    private final int maxSteps;
+
+    public StepCollector(int maxSteps) {
+        this.maxSteps = maxSteps;
+    }
+
+    /** Phase 4 safety cap: max tool steps allowed in one run. */
+    public int maxSteps() {
+        return maxSteps;
+    }
+
+    public int stepCount() {
+        return steps.size();
+    }
 
     public Step add(String tool, String server, String arguments,
                     String result, String error, long latencyMs) {

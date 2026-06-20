@@ -61,7 +61,7 @@ between sessions. (Contract & rules live in [`CLAUDE.md`](CLAUDE.md); the plan i
 | 2 — failure & recovery | ☑ done & verified | (see git log) | cleaner error capture in RecordingToolCallback; probed unknown-currency failures with qwen2.5:14b — recovers (apologize/list, or substitute+retry), no hallucination; mid-chain failure halts cleanly. Book Ch5. |
 | 3 — memory / multi-turn | ☑ done & verified | (see git log) | MessageChatMemoryAdvisor + MessageWindowChatMemory (in-memory), keyed by sessionId. Turn 2 "that total" resolved from turn 1 via memory; control session had no context (0 steps). Book Ch6. |
 | 3.5 — cost/usage observable | ☑ done & verified | (uncommitted) | Response-level usage in AgentResponse.usage: tokens (final round) + wallClockMs (full run) + $ estimate (Pricing table, $0 local). ChatModel-wrapper approach abandoned (loop runs inside the model). Book Ch7. |
-| 4 — async (202 + runId + poll) | ☐ not started | — | |
+| 4 — async (202 + runId + poll) | ☑ done & verified (uncommitted) | POST /agent/runs -> 202+runId (detached on ThreadPool executor); in-memory RunStore (QUEUED/RUNNING/DONE/FAILED) persists answer+steps+usage; GET /agent/runs/{id} polls. Sync /agent/run kept. eventId idempotency ✓. Safety caps: max-steps (hard FAILED) ✓, max-wall-clock timeout. Book Ch8. |
 | 5 — streaming live (SSE) | ☐ not started | — | |
 | 6 — multi-agent (optional) | ☐ not started | — | build only if asked |
 

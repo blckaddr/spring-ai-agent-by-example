@@ -53,8 +53,10 @@ the wrong answers taught us the most.
    requests, and we learn that memory faithfully carries forward mistakes too.
 7. [What Does It Cost?](07-what-does-it-cost.md) *(Phase 3.5)* — we make tokens, time, and dollars
    observable, hit a wrong-layer dead end, and learn what's easy vs hard about cost.
+8. [Letting It Run Detached](08-letting-it-run-detached.md) *(Phase 4)* — kick off, poll later; the
+   run outlives the request, and unattended loops need guard rails.
 
-*(More chapters land as the build continues — async, live streaming.)*
+*(More chapters land as the build continues — live streaming.)*
 
 ## The companion materials
 

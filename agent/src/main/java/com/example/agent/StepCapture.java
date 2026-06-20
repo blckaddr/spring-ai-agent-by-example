@@ -17,8 +17,8 @@ final class StepCapture {
     private StepCapture() {
     }
 
-    static StepCollector start() {
-        StepCollector collector = new StepCollector();
+    static StepCollector start(int maxSteps) {
+        StepCollector collector = new StepCollector(maxSteps);
         CURRENT.set(collector);
         return collector;
     }

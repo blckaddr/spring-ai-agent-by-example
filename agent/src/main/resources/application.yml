@@ -27,6 +27,13 @@ spring:
               url: http://localhost:8082
               endpoint: /mcp
 
+agent:
+  async:
+    pool-size: 4              # background workers for detached runs (Phase 4)
+  safety:
+    max-steps: 20            # hard cap on tool steps per run
+    max-wall-clock-ms: 120000  # detached run is marked FAILED if it overruns this
+
 logging:
   level:
     com.example.agent: INFO

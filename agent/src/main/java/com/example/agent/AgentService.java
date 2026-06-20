@@ -43,11 +43,14 @@ public class AgentService {
 
     private final ChatClient chatClient;
     private final List<ToolCallback> tools;
+    private final int maxSteps;
 
     public AgentService(ChatClient.Builder chatClientBuilder,
                         ToolCallbackProvider mcpToolProvider,
                         McpToolServerIndex serverIndex,
-                        ChatMemory chatMemory) {
+                        ChatMemory chatMemory,
+                        @org.springframework.beans.factory.annotation.Value("${agent.safety.max-steps:20}") int maxSteps) {
+        this.maxSteps = maxSteps;
         // Phase 3: a chat-memory advisor injects prior turns of the conversation (keyed by
         // conversation id) before each model call and saves the new turn after. State lives in
         // the ChatMemory store, OUTSIDE the request — never in instance fields (see CLAUDE.md).
@@ -65,7 +68,7 @@ public class AgentService {
 
     public AgentResponse run(String request, String sessionId) {
         String conversationId = (sessionId == null || sessionId.isBlank()) ? DEFAULT_SESSION : sessionId;
-        StepCollector collector = StepCapture.start();
+        StepCollector collector = StepCapture.start(maxSteps);
         long startNanos = System.nanoTime();
         try {
             ChatResponse response = chatClient.prompt()
