@@ -67,7 +67,7 @@ how much the model itself drives agent reliability. (Not a phase — an experime
 ## Target architecture (reached gradually, not all at once)
 
 ```
-currency-demo/                  parent POM (multi-module, local git)
+spring-ai-agent-by-example/     parent POM (multi-module, local git)
 │
 ├── mcp-server-currency/        Spring Boot — streamable-HTTP MCP
 │     └── convert(), listRates()    (stands in for a real dynamic MCP)
