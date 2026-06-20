@@ -6,6 +6,8 @@ import java.util.List;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.chat.metadata.Usage;
+import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.stereotype.Service;
@@ -64,18 +66,42 @@ public class AgentService {
     public AgentResponse run(String request, String sessionId) {
         String conversationId = (sessionId == null || sessionId.isBlank()) ? DEFAULT_SESSION : sessionId;
         StepCollector collector = StepCapture.start();
+        long startNanos = System.nanoTime();
         try {
-            String answer = chatClient.prompt()
+            ChatResponse response = chatClient.prompt()
                     .system(SYSTEM_PROMPT)
                     .user(request)
                     // Phase 3: select which conversation's memory this call reads/writes.
                     .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
                     .toolCallbacks(tools)
                     .call()
-                    .content();
-            return new AgentResponse(answer, collector.getSteps());
+                    .chatResponse();
+            long wallClockMs = (System.nanoTime() - startNanos) / 1_000_000;
+            String answer = response == null ? "" : response.getResult().getOutput().getText();
+            return new AgentResponse(answer, collector.getSteps(), summarizeUsage(response, wallClockMs));
         } finally {
             StepCapture.clear();
         }
+    }
+
+    /** Phase 3.5: cost/usage summary from the final ChatResponse (see RunUsage for scope). */
+    private static RunUsage summarizeUsage(ChatResponse response, long wallClockMs) {
+        Integer promptTokens = null;
+        Integer completionTokens = null;
+        Integer totalTokens = null;
+        String model = null;
+        if (response != null && response.getMetadata() != null) {
+            model = response.getMetadata().getModel();
+            Usage usage = response.getMetadata().getUsage();
+            if (usage != null) {
+                promptTokens = usage.getPromptTokens();
+                completionTokens = usage.getCompletionTokens();
+                totalTokens = usage.getTotalTokens();
+            }
+        }
+        double costUsd = Pricing.estimateUsd(model,
+                promptTokens == null ? 0 : promptTokens,
+                completionTokens == null ? 0 : completionTokens);
+        return new RunUsage(promptTokens, completionTokens, totalTokens, wallClockMs, costUsd, model, Pricing.note(model));
     }
 }

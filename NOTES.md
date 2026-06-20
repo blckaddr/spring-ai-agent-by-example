@@ -60,6 +60,7 @@ between sessions. (Contract & rules live in [`CLAUDE.md`](CLAUDE.md); the plan i
 | 1 — 2nd MCP + dependent multi-step | ☑ done & verified (structure) | (see git log) | calculator server (:8082, 3 tools) added; agent aggregates both; convert×3→add chain + per-server attribution work. Model threads tool outputs unreliably — see observations. |
 | 2 — failure & recovery | ☑ done & verified | (see git log) | cleaner error capture in RecordingToolCallback; probed unknown-currency failures with qwen2.5:14b — recovers (apologize/list, or substitute+retry), no hallucination; mid-chain failure halts cleanly. Book Ch5. |
 | 3 — memory / multi-turn | ☑ done & verified | (see git log) | MessageChatMemoryAdvisor + MessageWindowChatMemory (in-memory), keyed by sessionId. Turn 2 "that total" resolved from turn 1 via memory; control session had no context (0 steps). Book Ch6. |
+| 3.5 — cost/usage observable | ☑ done & verified | (uncommitted) | Response-level usage in AgentResponse.usage: tokens (final round) + wallClockMs (full run) + $ estimate (Pricing table, $0 local). ChatModel-wrapper approach abandoned (loop runs inside the model). Book Ch7. |
 | 4 — async (202 + runId + poll) | ☐ not started | — | |
 | 5 — streaming live (SSE) | ☐ not started | — | |
 | 6 — multi-agent (optional) | ☐ not started | — | build only if asked |
@@ -110,6 +111,17 @@ between sessions. (Contract & rules live in [`CLAUDE.md`](CLAUDE.md); the plan i
   - *Engineering lesson:* error-message QUALITY drives recovery (model used our "Known codes"
     list). Code change this phase: `RecordingToolCallback.cleanError()` extracts the inner `text=`
     from the wrapped MCP error.
+
+- **Phase 3.5 (cost/usage).** AgentResponse.usage = {promptTokens, completionTokens, totalTokens,
+  wallClockMs, estimatedCostUsd, model, note}. Source: final ChatResponse.getMetadata().getUsage().
+  - *Scope honesty:* tokens are the FINAL round's (Spring AI runs the tool loop INSIDE the chat
+    model, so per-round token sums aren't cleanly accessible without the tracing stack we skip).
+    wallClockMs IS the full-run time and grows with loop length (e.g. 9.6s/1-call vs 27.6s/7-call).
+  - *Dead end recorded:* wrapping the ChatModel bean (RecordingChatModel + BeanPostProcessor) broke
+    model-name seeding (`model cannot be null`) AND is the wrong layer (loop is inside the model) →
+    removed. Use response-level capture.
+  - *Provider portability:* Usage is provider-neutral → switching to Gemini/OpenAI = swap starter +
+    config + add one row to Pricing. Cost grows with loop rounds (context resent) + memory.
 
 - **Model-swap experiment (qwen2.5:14b) — RESOLVES layer 3.** Same code, same prompts, only
   `AGENT_MODEL=qwen2.5:14b`. The model threads its own convert outputs into `add`:

@@ -25,6 +25,7 @@ phase/intent, and lay the actual tags in one pass at the end.
 | `phase-1` | Phase 1 — 2nd MCP + dependent loop (+ model-swap experiment, config only) | Ch 3–4 |
 | `phase-2` | Phase 2 — failure & recovery | Ch 5 |
 | `phase-3` | Phase 3 — memory / multi-turn | Ch 6 |
+| `phase-3.5` | Phase 3.5 — cost/usage observable | Ch 7 |
 | `phase-4` | Phase 4 — async (202 + runId + poll) *(pending)* | *(pending)* |
 | `phase-5` | Phase 5 — streaming the loop live (SSE) *(pending)* | *(pending)* |
 

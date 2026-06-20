@@ -51,6 +51,8 @@ the wrong answers taught us the most.
    that a good error message is an agent-design decision.
 6. [Giving It Memory](06-giving-it-memory.md) *(Phase 3)* — the agent stops forgetting between
    requests, and we learn that memory faithfully carries forward mistakes too.
+7. [What Does It Cost?](07-what-does-it-cost.md) *(Phase 3.5)* — we make tokens, time, and dollars
+   observable, hit a wrong-layer dead end, and learn what's easy vs hard about cost.
 
 *(More chapters land as the build continues — async, live streaming.)*
 
