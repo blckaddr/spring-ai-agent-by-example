@@ -17,8 +17,8 @@ final class StepCapture {
     private StepCapture() {
     }
 
-    static StepCollector start(int maxSteps) {
-        StepCollector collector = new StepCollector(maxSteps);
+    static StepCollector start(int maxSteps, java.util.function.Consumer<Step> listener) {
+        StepCollector collector = new StepCollector(maxSteps, listener);
         CURRENT.set(collector);
         return collector;
     }

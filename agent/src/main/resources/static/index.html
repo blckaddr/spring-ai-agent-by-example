@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Watch the Agent Think</title>
+<style>
+  :root{
+    --ink:#0f172a; --muted:#64748b; --card:#ffffffe6;
+    --accent:#6366f1; --accent2:#818cf8; --ok:#10b981;
+    --err:#ef4444; --line:#e2e8f0; --chip:#eef2ff; --chipink:#4338ca;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+    background:radial-gradient(900px 520px at 12% -8%,#e2e8f0aa 0%,transparent 60%),
+               radial-gradient(820px 520px at 108% 2%,#e5e7ebaa 0%,transparent 55%),
+               linear-gradient(160deg,#f8fafc,#eef1f5);
+    background-attachment:fixed;
+  }
+  /* full-height app: header (top) · conversation (scrolls) · composer (bottom) */
+  .app{max-width:760px;margin:0 auto;height:100dvh;display:flex;flex-direction:column;padding:1.1rem 1.2rem}
+
+  header{flex:none;margin-bottom:.6rem}
+  .headrow{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem}
+  .eyebrow{font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:700}
+  h1{font-size:1.55rem;margin:.2rem 0 .3rem;font-weight:700;letter-spacing:-.02em}
+  .tip{margin:0;font-size:.85rem;color:var(--muted);max-width:58ch}
+  .tip code{background:var(--chip);color:var(--chipink);padding:.05rem .35rem;border-radius:5px}
+  .ghost{border:0;background:transparent;color:var(--muted);font:inherit;font-size:.85rem;cursor:pointer;padding:.3rem .5rem;border-radius:8px;white-space:nowrap}
+  .ghost:hover{color:var(--accent);background:#6366f114}
+
+  .conv{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:1.6rem;padding:.4rem 0 1rem}
+  .empty{margin:auto;color:var(--muted);font-size:.95rem;text-align:center;opacity:.8}
+
+  .turn{display:flex;flex-direction:column;gap:.6rem}
+  .user{align-self:flex-end;max-width:82%;background:linear-gradient(135deg,var(--accent),var(--accent2));
+    color:#fff;padding:.55rem .85rem;border-radius:14px 14px 4px 14px;font-size:.95rem;
+    box-shadow:0 8px 18px -10px var(--accent)}
+  .steps{display:flex;flex-direction:column;gap:.6rem}
+
+  .thinking{display:flex;align-items:center;gap:.6rem;color:#4f46e5;font-size:.92rem;padding:.2rem}
+  .dots{display:inline-flex;gap:.25rem}
+  .dots i{width:7px;height:7px;border-radius:50%;background:#a5b4fc;animation:b 1s infinite ease-in-out}
+  .dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}
+  @keyframes b{0%,80%,100%{opacity:.3;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
+
+  .card{background:var(--card);backdrop-filter:blur(8px);border-radius:14px;padding:.8rem 1rem .8rem .55rem;
+    box-shadow:0 12px 28px -18px #0009;display:flex;gap:.7rem;align-items:flex-start;
+    animation:in .35s cubic-bezier(.2,.8,.2,1) both}
+  @keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .rail{position:relative;flex:none;width:34px;display:flex;justify-content:center}
+  .rail::before{content:"";position:absolute;left:50%;top:-1.3rem;bottom:-1.3rem;width:2px;background:var(--line);transform:translateX(-50%)}
+  .node{position:relative;z-index:1;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
+    margin-top:1px;font-weight:700;font-size:.82rem;color:#fff;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 4px 12px -5px var(--accent)}
+  .steps .card:first-of-type .rail::before{top:1.1rem}
+  .body{flex:1;min-width:0;padding-top:.15rem}
+  .title{font-weight:600;font-size:1rem;line-height:1.35}
+  .title .ic{margin-right:.35rem}
+  .title .res{color:var(--ok);font-weight:700}
+  .sub{margin-top:.2rem;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;color:var(--muted);font-size:.8rem}
+  .num{font-variant-numeric:tabular-nums}
+  .card.error .node{background:linear-gradient(135deg,#ef4444,#f97316)}
+  .card.error .title .res{color:var(--err)}
+
+  .answer{background:linear-gradient(135deg,#ffffff,#eef2ff);border-radius:16px;padding:1.1rem 1.2rem;
+    box-shadow:0 18px 36px -18px #0009;border:1px solid #c7d2fe66;animation:in .4s ease both}
+  .answer .lbl{font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:700}
+  .answer .txt{font-size:1.15rem;font-weight:600;margin:.3rem 0 .8rem;line-height:1.45}
+  .stats{display:flex;gap:.5rem;flex-wrap:wrap}
+  .stat{background:#1e293b0d;border-radius:10px;padding:.4rem .7rem;font-size:.8rem;color:#334155}
+  .stat b{display:block;font-size:1rem;color:var(--ink);font-variant-numeric:tabular-nums}
+
+  /* composer pinned at the bottom */
+  .composer{flex:none;margin-top:.5rem;display:flex;gap:.5rem;background:var(--card);backdrop-filter:blur(8px);
+    padding:.5rem;border-radius:16px;box-shadow:0 -10px 30px -18px #0007, 0 12px 30px -18px #0006}
+  .composer input{flex:1;border:0;background:transparent;font:inherit;font-size:1rem;color:var(--ink);padding:.7rem .8rem;outline:none}
+  .composer button{border:0;border-radius:11px;cursor:pointer;font:inherit;font-weight:600;color:#fff;padding:.7rem 1.4rem;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 8px 20px -8px var(--accent);transition:transform .08s ease,opacity .2s}
+  .composer button:hover{transform:translateY(-1px)} .composer button:disabled{opacity:.55;cursor:default;transform:none}
+</style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="headrow">
+        <div>
+          <div class="eyebrow">Spring AI · MCP tools · live</div>
+          <h1>Watch the agent think</h1>
+        </div>
+        <button id="newchat" class="ghost" type="button">↻ New chat</button>
+      </div>
+      <p class="tip">Ask for a multi-currency total — each tool call streams in live. It remembers
+         the conversation: follow up with <code>now convert that total to yen</code> or
+         <code>now add 50 CAD</code>.</p>
+    </header>
+
+    <div class="conv" id="conv">
+      <div class="empty" id="empty">Ask a question below to begin ↓</div>
+    </div>
+
+    <form class="composer" id="f">
+      <input id="input" type="text" autocomplete="off"
+             value="Add 100 USD, 50 EUR and 5000 JPY and give the total in GBP."/>
+      <button id="go" type="submit">Send ▸</button>
+    </form>
+  </div>
+
+<script>
+  const form = document.getElementById('f');
+  const inputEl = document.getElementById('input');
+  const go = document.getElementById('go');
+  const conv = document.getElementById('conv');
+  const emptyEl = document.getElementById('empty');
+  let es = null;
+  let sessionId = newSid();
+  function newSid(){ return 'ui-' + Math.random().toString(36).slice(2, 8); }
+  const toBottom = () => { conv.scrollTop = conv.scrollHeight; };
+
+  const ICON = { convert:'💱', add:'➕', subtract:'➖', multiply:'✖️', listRates:'📋' };
+  const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+  function resultValue(raw){
+    if (raw == null) return '';
+    try { const v = JSON.parse(raw); if (Array.isArray(v) && v[0] && 'text' in v[0]) return v[0].text; } catch(_){}
+    return raw;
+  }
+  const fmt = n => (n===undefined||n===null) ? '' : String(n);
+  function humanize(s){
+    let a = {}; try { a = JSON.parse(s.arguments) || {}; } catch(_){}
+    const res = resultValue(s.result);
+    if (s.tool === 'convert')  return `${fmt(a.amount)} ${esc(a.from)} → ${esc(a.to)} <span class="res num">= ${esc(res)}</span>`;
+    if (s.tool === 'add')      return `${(a.numbers||[]).map(fmt).join(' + ')} <span class="res num">= ${esc(res)}</span>`;
+    if (s.tool === 'multiply') return `${(a.numbers||[]).map(fmt).join(' × ')} <span class="res num">= ${esc(res)}</span>`;
+    if (s.tool === 'subtract') return `${fmt(a.a)} − ${fmt(a.b)} <span class="res num">= ${esc(res)}</span>`;
+    return `${esc(s.tool)}(${esc(s.arguments)}) <span class="res">→ ${esc(res)}</span>`;
+  }
+
+  function stepCard(s, stepsEl){
+    const div = document.createElement('div');
+    div.className = 'card' + (s.error ? ' error' : '');
+    const icon = ICON[s.tool] || (s.error ? '⚠️' : '🛠️');
+    const title = s.error
+      ? `<span class="ic">${icon}</span>${esc(s.tool)} <span class="res">failed</span>`
+      : `<span class="ic">${icon}</span>${humanize(s)}`;
+    const detail = s.error ? `<div class="sub"><span class="res">${esc(s.error)}</span></div>` : '';
+    div.innerHTML = `
+      <div class="rail"><div class="node">${esc(s.step)}</div></div>
+      <div class="body">
+        <div class="title">${title}</div>
+        ${detail}
+        <div class="sub"><span>${esc(s.tool)}</span>·<span>${esc(s.server)}</span>·<span class="num">${s.latencyMs}ms</span></div>
+      </div>`;
+    stepsEl.appendChild(div); toBottom();
+  }
+
+  function answerCard(d, turnEl){
+    const u = d.usage || {};
+    const div = document.createElement('div');
+    div.className = 'answer';
+    const answerHtml = esc(d.answer).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    div.innerHTML = `
+      <div class="lbl">Answer</div>
+      <div class="txt">${answerHtml}</div>
+      <div class="stats">
+        <div class="stat">tokens<b class="num">${u.totalTokens ?? '–'}</b></div>
+        <div class="stat">wall-clock<b class="num">${u.wallClockMs!=null ? (u.wallClockMs/1000).toFixed(1)+'s' : '–'}</b></div>
+        <div class="stat">est. cost<b class="num">$${(u.estimatedCostUsd ?? 0)}</b></div>
+        <div class="stat">model<b>${esc(u.model ?? '–')}</b></div>
+      </div>`;
+    turnEl.appendChild(div); toBottom();
+  }
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const input = inputEl.value.trim();
+    if (!input || go.disabled) return;
+    if (emptyEl) emptyEl.remove();
+    inputEl.value = '';
+    go.disabled = true;
+    if (es) es.close();
+
+    const turn = document.createElement('div');
+    turn.className = 'turn';
+    turn.innerHTML = `<div class="user">${esc(input)}</div><div class="steps"></div>
+      <div class="thinking"><span class="dots"><i></i><i></i><i></i></span> the agent is thinking…</div>`;
+    conv.appendChild(turn);
+    const stepsEl = turn.querySelector('.steps');
+    const thinkEl = turn.querySelector('.thinking');
+    toBottom();
+
+    es = new EventSource('/agent/stream?input=' + encodeURIComponent(input) + '&sessionId=' + sessionId);
+    es.addEventListener('step',   e => stepCard(JSON.parse(e.data), stepsEl));
+    es.addEventListener('answer', e => answerCard(JSON.parse(e.data), turn));
+    es.addEventListener('done',   () => { thinkEl.remove(); go.disabled = false; es.close(); toBottom(); inputEl.focus(); });
+    es.addEventListener('error',  e => {
+      thinkEl.remove(); go.disabled = false;
+      if (e.data){ try { stepCard({step:'!',tool:'error',server:'agent',latencyMs:0,error:JSON.parse(e.data).message}, stepsEl); } catch(_){} }
+      es.close();
+    });
+  });
+
+  document.getElementById('newchat').addEventListener('click', () => {
+    if (es) es.close();
+    conv.innerHTML = '<div class="empty">Ask a question below to begin ↓</div>';
+    sessionId = newSid();
+    inputEl.focus();
+  });
+</script>
+</body>
+</html>

@@ -62,7 +62,7 @@ between sessions. (Contract & rules live in [`CLAUDE.md`](CLAUDE.md); the plan i
 | 3 — memory / multi-turn | ☑ done & verified | (see git log) | MessageChatMemoryAdvisor + MessageWindowChatMemory (in-memory), keyed by sessionId. Turn 2 "that total" resolved from turn 1 via memory; control session had no context (0 steps). Book Ch6. |
 | 3.5 — cost/usage observable | ☑ done & verified | (uncommitted) | Response-level usage in AgentResponse.usage: tokens (final round) + wallClockMs (full run) + $ estimate (Pricing table, $0 local). ChatModel-wrapper approach abandoned (loop runs inside the model). Book Ch7. |
 | 4 — async (202 + runId + poll) | ☑ done & verified (uncommitted) | POST /agent/runs -> 202+runId (detached on ThreadPool executor); in-memory RunStore (QUEUED/RUNNING/DONE/FAILED) persists answer+steps+usage; GET /agent/runs/{id} polls. Sync /agent/run kept. eventId idempotency ✓. Safety caps: max-steps (hard FAILED) ✓, max-wall-clock timeout. Book Ch8. |
-| 5 — streaming live (SSE) | ☐ not started | — | |
+| 5 — streaming live (SSE) | ☑ done & verified (uncommitted) | GET /agent/stream (SseEmitter) pushes each Step live via a step listener on the capture hook; static/index.html (EventSource) renders it. Verified via timestamped curl: events smeared across ~45s as the loop runs (not batched). Book Ch9. |
 | 6 — multi-agent (optional) | ☐ not started | — | build only if asked |
 
 ## Decisions log

@@ -55,8 +55,8 @@ the wrong answers taught us the most.
    observable, hit a wrong-layer dead end, and learn what's easy vs hard about cost.
 8. [Letting It Run Detached](08-letting-it-run-detached.md) *(Phase 4)* — kick off, poll later; the
    run outlives the request, and unattended loops need guard rails.
-
-*(More chapters land as the build continues — live streaming.)*
+9. [Watching It Think](09-watching-it-think.md) *(Phase 5)* — the finale: each step pushed live over
+   SSE, with a tiny HTML page. The "watch it think" goal, achieved almost for free thanks to Ch 2.
 
 ## The companion materials
 

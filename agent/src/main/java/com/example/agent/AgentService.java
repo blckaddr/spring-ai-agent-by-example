@@ -31,12 +31,17 @@ public class AgentService {
             operation and EVERY currency conversion — never compute or convert in your head.
             When amounts are in different currencies, first convert EACH amount to the target
             currency with the convert tool, and only THEN sum the converted amounts with the
-            add tool. Do not call add until all needed conversions are done.
+            add tool. Do not call add until all needed conversions are done. Convert each amount
+            EXACTLY ONCE — never repeat a conversion you have already performed — then call add a
+            single time. Do not double-check by re-running tools.
 
             Tool argument types are strict. Pass numbers as JSON numbers, never as strings:
             use amount: 100, not amount: "100". Pass number lists as JSON arrays of numbers:
             use numbers: [1.0, 2.0, 3.0], not numbers: "[1.0, 2.0, 3.0]". When you add the
-            converted amounts, pass the ACTUAL converted values returned by the convert tool.""";
+            converted amounts, pass the ACTUAL converted values returned by the convert tool.
+
+            If the user refers to a previously computed result (for example "that total"), reuse
+            that value directly — do NOT re-convert the original amounts or recompute the total.""";
 
     /** Phase 3: default conversation when the caller doesn't supply a sessionId. */
     private static final String DEFAULT_SESSION = "default";
@@ -67,8 +72,13 @@ public class AgentService {
     }
 
     public AgentResponse run(String request, String sessionId) {
+        return run(request, sessionId, null);
+    }
+
+    /** Phase 5: same run, but each step is also pushed to {@code stepListener} as it fires. */
+    public AgentResponse run(String request, String sessionId, java.util.function.Consumer<Step> stepListener) {
         String conversationId = (sessionId == null || sessionId.isBlank()) ? DEFAULT_SESSION : sessionId;
-        StepCollector collector = StepCapture.start(maxSteps);
+        StepCollector collector = StepCapture.start(maxSteps, stepListener);
         long startNanos = System.nanoTime();
         try {
             ChatResponse response = chatClient.prompt()
