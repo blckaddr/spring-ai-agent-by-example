@@ -58,7 +58,7 @@ between sessions. (Contract & rules live in [`CLAUDE.md`](CLAUDE.md); the plan i
 |-------|--------|--------|-------|
 | 0 — sync loop, 1 MCP, step visibility | ☑ done & verified | (see git log) | "convert 100 USD to EUR" → 92.0; steps[] + console log show the convert call. Ports: agent 8080, currency 8081. |
 | 1 — 2nd MCP + dependent multi-step | ☑ done & verified (structure) | (see git log) | calculator server (:8082, 3 tools) added; agent aggregates both; convert×3→add chain + per-server attribution work. Model threads tool outputs unreliably — see observations. |
-| 2 — failure & recovery | ☐ not started | — | |
+| 2 — failure & recovery | ☑ done & verified | (see git log) | cleaner error capture in RecordingToolCallback; probed unknown-currency failures with qwen2.5:14b — recovers (apologize/list, or substitute+retry), no hallucination; mid-chain failure halts cleanly. Book Ch5. |
 | 3 — memory / multi-turn | ☐ not started | — | |
 | 4 — async (202 + runId + poll) | ☐ not started | — | |
 | 5 — streaming live (SSE) | ☐ not started | — | |
@@ -95,6 +95,21 @@ between sessions. (Contract & rules live in [`CLAUDE.md`](CLAUDE.md); the plan i
     the model. Natural next experiment: swap `AGENT_MODEL` to a stronger tool-capable model and
     re-run — expect the data-threading to improve. (This is the plan's "model drives reliability"
     point, demonstrated.)
+
+- **Phase 2 (qwen2.5:14b), failure & recovery.**
+  - *Predictive refusal:* `convert(…, "ZZZ")` → the model made ZERO tool calls (knew ZZZ isn't a
+    real ISO code) and asked for a valid one. To trigger a real tool failure, use a valid ISO code
+    absent from the demo table (e.g. AUD; table = USD/EUR/GBP/JPY/CHF/CAD).
+  - *Recovery:* on `convert(USD→AUD)` failure, the clean error (incl. "Known codes: [...]") is fed
+    back; the model recovers — either apologize+list supported, or substitute a valid currency
+    (CAD) and retry. Never hallucinates a rate (unlike llama3.1:8b in Phase 1).
+  - *Mid-chain failure:* "Add 100 USD + 50 AUD → GBP" converts USD ok, AUD fails → model HALTS
+    (no `add`, no fabricated value), reports partial + reason. Correct.
+  - *Quirk:* one mid-chain run answered correctly but IN THAI (qwen language drift). Reasoning fine,
+    language unexpected — reading steps[] beats trusting the answer prose.
+  - *Engineering lesson:* error-message QUALITY drives recovery (model used our "Known codes"
+    list). Code change this phase: `RecordingToolCallback.cleanError()` extracts the inner `text=`
+    from the wrapped MCP error.
 
 - **Model-swap experiment (qwen2.5:14b) — RESOLVES layer 3.** Same code, same prompts, only
   `AGENT_MODEL=qwen2.5:14b`. The model threads its own convert outputs into `add`:

@@ -1,5 +1,8 @@
 package com.example.agent;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.model.ToolContext;
@@ -63,7 +66,7 @@ public class RecordingToolCallback implements ToolCallback {
                     : delegate.call(toolInput, toolContext);
             return result;
         } catch (RuntimeException e) {
-            error = e.getClass().getSimpleName() + ": " + e.getMessage();
+            error = cleanError(e);
             throw e; // let the loop see the failure unchanged (Phase 2)
         } finally {
             long latencyMs = (System.nanoTime() - startNanos) / 1_000_000;
@@ -74,5 +77,22 @@ public class RecordingToolCallback implements ToolCallback {
             log.info("[step] tool={} server={} args={} result={} error={} latencyMs={}",
                     tool, server, toolInput, result, error, latencyMs);
         }
+    }
+
+    /**
+     * MCP tool failures arrive wrapped, e.g.
+     * {@code ToolExecutionException: Error calling tool: [TextContent[..., text=Unsupported
+     * currency code: 'AUD'. Known codes: [...]], meta=null]]}. For legible step records we pull
+     * out the inner {@code text=...} root message when present (Phase 2). Falls back to the raw
+     * message so nothing is ever lost.
+     */
+    private static String cleanError(Throwable e) {
+        String type = e.getClass().getSimpleName();
+        String msg = e.getMessage();
+        if (msg == null) {
+            return type;
+        }
+        Matcher m = Pattern.compile("text=(.*), meta=", Pattern.DOTALL).matcher(msg);
+        return type + ": " + (m.find() ? m.group(1).trim() : msg);
     }
 }

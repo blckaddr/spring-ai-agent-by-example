@@ -47,9 +47,10 @@ the wrong answers taught us the most.
    several steps, and the moment the model's limits became impossible to ignore.
 4. [A Better Brain](04-a-better-brain.md) *(experiment)* — we change nothing but the model, and
    a failure that no prompt could fix simply vanishes.
+5. [When Tools Fail](05-when-tools-fail.md) *(Phase 2)* — we break the tools on purpose and learn
+   that a good error message is an agent-design decision.
 
-*(More chapters land as the build continues — failure & recovery, memory, async, live
-streaming.)*
+*(More chapters land as the build continues — memory, async, live streaming.)*
 
 ## The companion materials
 
