@@ -58,6 +58,14 @@ the wrong answers taught us the most.
 9. [Watching It Think](09-watching-it-think.md) *(Phase 5)* — the finale: each step pushed live over
    SSE, with a tiny HTML page. The "watch it think" goal, achieved almost for free thanks to Ch 2.
 
+## Running it while you read
+
+The build is **cumulative** — the final `main` has every phase's features — so every chapter's
+**"Try it yourself"** box works against a single running stack. See the
+[root README](../README.md) to start it (Ollama + three services), then run each chapter's commands
+as you go. To inspect the code as it was at a given phase, check out its tag (e.g.
+`git checkout phase-2`); read the prose here on `main`.
+
 ## The companion materials
 
 This book is the *story*. The repo also keeps:

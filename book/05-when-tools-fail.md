@@ -121,4 +121,16 @@ the right call — partial honesty over confident nonsense.
 We now have an agent that loops, orchestrates across servers, and copes with failure — but it
 still forgets everything the instant a request ends. Next we give it a memory.
 
-→ *Chapter 6 — Giving It Memory (Phase 3, upcoming)*
+## Try it yourself
+
+Ask for a currency the demo server doesn't stock (AUD is a real ISO code, just not in its table):
+
+```bash
+curl -s localhost:8080/agent/run -H 'Content-Type: application/json' \
+  -d '{"input":"Convert 100 USD to AUD."}'
+```
+
+The `convert` step carries an `error`; read how the model recovers — it lists the supported codes
+or substitutes one — instead of inventing a rate.
+
+→ [Chapter 6 — Giving It Memory](06-giving-it-memory.md)

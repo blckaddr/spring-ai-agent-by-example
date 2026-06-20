@@ -91,4 +91,10 @@ the interesting parts debuggable later.
 Next: the smallest agent that can possibly work — and the one habit that made every later phase
 legible.
 
+## Try it yourself
+
+Nothing to run yet — just get set up: install Java 21 + Maven + [Ollama](https://ollama.com), then
+`ollama pull qwen2.5:14b`, and follow [the README](../README.md) to start the three services. From
+the next chapter on, each ends with commands you can run against a live agent.
+
 → [Chapter 2 — Seeing the Loop](02-seeing-the-loop.md)

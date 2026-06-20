@@ -17,3 +17,6 @@ target/
 
 # Logs
 *.log
+
+# run-all.sh output
+logs/

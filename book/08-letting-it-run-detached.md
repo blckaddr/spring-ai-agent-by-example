@@ -89,4 +89,18 @@ The agent now reasons, orchestrates, recovers, remembers, reports its cost, and 
 polling still hides the *process* — you only see the result when it's all over. The original goal
 was to *watch the agent think, live*. That's the finale.
 
-→ *Chapter 9 — Watching It Think (Phase 5, upcoming)*
+## Try it yourself
+
+Kick off a detached run, get a `runId`, then poll it:
+
+```bash
+runId=$(curl -s localhost:8080/agent/runs -H 'Content-Type: application/json' \
+  -d '{"input":"Add 100 USD, 50 EUR and 5000 JPY and give the total in GBP."}' \
+  | jq -r .runId)
+curl -s localhost:8080/agent/runs/$runId | jq      # repeat until status: DONE
+```
+
+The POST returns instantly (QUEUED/RUNNING); the result waits in the store. The sync
+`/agent/run` still works too.
+
+→ [Chapter 9 — Watching It Think](09-watching-it-think.md)

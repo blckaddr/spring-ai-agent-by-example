@@ -83,13 +83,21 @@ amount exactly once; do not double-check by re-running tools"* — settled it. S
 Chapters 3 and 7, one more time: with these models, *how you ask* visibly changes what the loop
 does — and a glass-box agent is what let us see the difference and fix it.
 
-By now the system prompt has accreted three rules, each added the moment a run showed it was
-needed: **order** (convert before adding — Ch 3), **types** (JSON numbers, not strings — Ch 3),
-and now **no redundancy** (convert each amount once). None were designed up front; each answered an
-observed failure. That's **prompt engineering** in practice — not a one-shot magic incantation, but
-a short list of rules you accrete by watching the loop misbehave and naming exactly what it got
-wrong. *(We never changed the model itself — it's stock `qwen2.5:14b`; only its instructions
-evolved.)*
+By now the system prompt has accreted four rules, each added the moment a run showed it was needed:
+**order** (convert before adding — Ch 3), **types** (JSON numbers, not strings — Ch 3),
+**no redundancy** (convert each amount once), and **reuse** (when the user refers back to an earlier
+result — "that total" — convert *that* value instead of recomputing the whole sum from the original
+amounts). None were designed up front; each answered an observed failure. That's **prompt
+engineering** in practice — not a one-shot magic incantation, but a short list of rules you accrete
+by watching the loop misbehave and naming exactly what it got wrong.
+
+But prompting isn't all-powerful, and the contrast is the real lesson. Those four rules are all
+about *reasoning and format* — and they stuck. A *stylistic* one didn't: the model also drifts into
+answering in Thai or another language (Chapter 5), and **no instruction we wrote made it reliable**
+— "answer in English," "answer in the user's language," it ignored them all. Some failures yield to
+a better prompt; others are a capability limit (like the data-threading wall of Chapter 3) and need
+a better model, not better words. Knowing which is which is most of the skill. *(The model itself is
+unchanged throughout — stock `qwen2.5:14b`; only its instructions evolved.)*
 
 ## What it taught us
 
@@ -119,5 +127,16 @@ If you've followed from Chapter 1: you didn't just wire up an agent. You watched
 *where the hard parts actually are* — the model's reliability ceiling, the value of a clear error
 message, that memory carries mistakes forward, that the loop is the cost multiplier — and you have
 a glass-box agent you can see straight through.
+
+## Try it yourself
+
+Open <http://localhost:8080/> and hit **Run** — watch the steps stream in live. Or consume the raw
+event stream from the terminal:
+
+```bash
+curl -N "localhost:8080/agent/stream?input=Add%20100%20USD%2C%2050%20EUR%20and%205000%20JPY%20and%20give%20the%20total%20in%20GBP."
+```
+
+The events arrive *as the loop runs*, not batched at the end — that's the whole point.
 
 → *Phase 6 (planning / multi-agent) — frontier, optional, not built.*

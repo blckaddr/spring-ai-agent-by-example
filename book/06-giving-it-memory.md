@@ -103,4 +103,18 @@ The agent can now hold a conversation. But every loop so far has run *synchronou
 waits, holding the HTTP connection, until the whole thing finishes. Real agent runs can take
 minutes. Next we let the loop run detached.
 
-→ *Chapter 7 — Letting It Run Detached (Phase 4, upcoming)*
+## Try it yourself
+
+Two turns, same `sessionId` — the follow-up refers back:
+
+```bash
+curl -s localhost:8080/agent/run -H 'Content-Type: application/json' \
+  -d '{"input":"Add 100 USD and 50 EUR and give the total in GBP.","sessionId":"demo"}'
+curl -s localhost:8080/agent/run -H 'Content-Type: application/json' \
+  -d '{"input":"Now convert that total to Japanese yen.","sessionId":"demo"}'
+```
+
+The second resolves "that total" from memory. Run the same follow-up with a *different* `sessionId`
+and it won't know what "that" means — memory is keyed per conversation.
+
+→ [Chapter 7 — What Does It Cost?](07-what-does-it-cost.md)

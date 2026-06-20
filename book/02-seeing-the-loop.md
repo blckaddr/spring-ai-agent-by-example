@@ -89,4 +89,15 @@ tool returned `92.0`, and the model wrapped that into a sentence. Not a black bo
 One tool, one step, one correct answer. Comfortable. The next phase broke that comfort on purpose
 — by asking for something that takes *more than one* step.
 
+## Try it yourself
+
+Start the services ([README](../README.md)), then:
+
+```bash
+curl -s localhost:8080/agent/run -H 'Content-Type: application/json' \
+  -d '{"input":"Convert 100 USD to EUR."}'
+```
+
+Expect `answer` ≈ 92.0 EUR and a single `convert` step in `steps[]` — the loop, made visible.
+
 → [Chapter 3 — The Real Loop](03-the-real-loop.md)

@@ -102,4 +102,17 @@ And the cost *shape* to keep in mind once it's real money:
 The agent can now reason, orchestrate, recover, remember — and report what it spent. Everything so
 far, though, has made the caller *wait* for the whole loop. Next we let it run detached.
 
-→ *Chapter 8 — Letting It Run Detached (Phase 4, upcoming)*
+## Try it yourself
+
+Every run now reports usage — inspect the `usage` block:
+
+```bash
+curl -s localhost:8080/agent/run -H 'Content-Type: application/json' \
+  -d '{"input":"Add 100 USD, 50 EUR and 5000 JPY and give the total in GBP."}' \
+  | jq .usage
+```
+
+`$0` locally; `wallClockMs` grows with loop length. Add a row to `Pricing` to estimate a hosted
+model's dollars without changing any other code.
+
+→ [Chapter 8 — Letting It Run Detached](08-letting-it-run-detached.md)

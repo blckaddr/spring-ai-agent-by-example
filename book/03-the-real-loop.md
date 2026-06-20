@@ -147,4 +147,14 @@ Which leaves an obvious, testable question hanging in the air:
 
 That's the next chapter.
 
+## Try it yourself
+
+```bash
+curl -s localhost:8080/agent/run -H 'Content-Type: application/json' \
+  -d '{"input":"Add 100 USD, 50 EUR and 5000 JPY and give the total in GBP."}'
+```
+
+Watch `steps[]`: three `convert` calls (currency-tools) then one `add` (calculator-tools) → 147.09.
+On `qwen2.5:14b` it threads the values; on `llama3.1:8b` it often won't (next chapter).
+
 → [Chapter 4 — A Better Brain](04-a-better-brain.md)
