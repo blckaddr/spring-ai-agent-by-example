@@ -10,7 +10,8 @@ between sessions. (Contract & rules live in [`CLAUDE.md`](CLAUDE.md); the plan i
 | Ollama installed | yes — client `0.21.2` | ☑ (2026-06-20) |
 | Ollama endpoint | `http://localhost:11434` | ☑ |
 | Ollama server running? | **NO at check time** — start with `ollama serve` or the desktop app before running the agent | ☐ |
-| Model tag (default, tool-capable) | **`llama3.1:8b`** (on disk) | ☑ |
+| Model tag (RECOMMENDED, reliable) | **`qwen2.5:14b`** (~9GB, ~18GB resident) — threads tool outputs correctly; gets the multi-step task right 3/3 | ☑ (2026-06-20) |
+| Model tag (default config) | `llama3.1:8b` — gets loop SHAPE right but fabricates `add` inputs; good for the "model matters" lesson | ☑ |
 | Models for failure experiments | `qwen2.5:3b` (weak), `qwen2.5:0.5b` (very weak) — both on disk; `llama3` on disk is NOT reliably tool-capable, don't use | ☑ |
 | Spring Boot version | `4.1.0` (Spring AI 2.0.0 resolves to Boot 4.1.0) | ☑ (2026-06-20) |
 | Spring AI version (BOM) | `2.0.0` (2.0.x line — pairs with Boot 4.x) — see [ADR-0005](docs/adr/0005-spring-ai-2-on-boot-4.md) | ☑ (2026-06-20) |
@@ -94,3 +95,9 @@ between sessions. (Contract & rules live in [`CLAUDE.md`](CLAUDE.md); the plan i
     the model. Natural next experiment: swap `AGENT_MODEL` to a stronger tool-capable model and
     re-run — expect the data-threading to improve. (This is the plan's "model drives reliability"
     point, demonstrated.)
+
+- **Model-swap experiment (qwen2.5:14b) — RESOLVES layer 3.** Same code, same prompts, only
+  `AGENT_MODEL=qwen2.5:14b`. The model threads its own convert outputs into `add`:
+  `add([79, 42.93, 25.16]) = 147.09` — CORRECT, 3/3 runs. Confirms the data-threading failure was
+  a model-capability ceiling, not a code/prompt bug. Cost: slower (seconds vs ms) + ~18GB resident
+  vs ~6GB. Documented as book Chapter 4.
