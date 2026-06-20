@@ -7,6 +7,9 @@ Project documentation. Two kinds live here:
 - [`architecture/`](architecture/) — **Architecture docs.** Living description of how the
   system is shaped (components, boundaries, the agent loop, data flow). Updated as the build
   grows phase by phase.
+- [`troubleshooting.md`](troubleshooting.md) — **Troubleshooting.** Common issues running it
+  (no tools firing, Ollama, ports, language drift, push errors).
+- [`PUBLISHING.md`](PUBLISHING.md) — **Publishing checklist** — tags and the release steps.
 
 ## How docs relate to the rest of the repo
 

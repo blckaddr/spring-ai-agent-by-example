@@ -7,27 +7,29 @@
 
 ## Components
 
-```
-                       ┌──────────────────────────────────────────┐
-   HTTP (REST/SSE)     │  agent  (Spring Boot)                     │
-  ───────────────────▶ │   • Ollama ChatClient                    │
-   POST /agent/run     │   • MCP client (streamable-HTTP)          │
-   GET  /agent/run/{id}│   • tool-calling loop (run by Spring AI)  │
-                       │   • step-capture hook  ◀── the handrail   │
-                       └───────┬───────────────────────┬──────────┘
-                               │ MCP / HTTP             │ MCP / HTTP
-                               ▼                        ▼
-            ┌─────────────────────────┐   ┌──────────────────────────────┐
-            │ mcp-server-currency      │   │ mcp-server-calculator         │
-            │ (Spring Boot, MCP)       │   │ (Spring Boot, MCP)  [Phase 1] │
-            │  • convert(amt,from,to)  │   │  • add(...)                   │
-            │  • listRates()           │   │  • (subtract/multiply)        │
-            └─────────────────────────┘   └──────────────────────────────┘
+```mermaid
+flowchart TB
+    user(["Browser / client"])
 
-   ┌────────────────┐
-   │ Ollama         │  local LLM, http://localhost:11434, tool-capable model
-   │ (external)     │  ◀── agent's ChatClient talks to this
-   └────────────────┘
+    subgraph agent["agent · Spring Boot · :8080"]
+      direction TB
+      api["REST + SSE endpoints<br/>/agent/run (sync) · /agent/runs + /agent/runs/:id (async)<br/>/agent/stream (SSE) · / (chat UI)"]
+      core["Ollama ChatClient<br/>tool-calling loop (run by Spring AI) · chat memory"]
+      hook["step-capture hook — the handrail<br/>logs · steps · usage · live SSE"]
+      mcpc["MCP client (streamable-HTTP)"]
+      api --> core
+      core --> hook
+      core --> mcpc
+    end
+
+    ollama[("Ollama — local LLM<br/>:11434 · tool-capable model")]
+    currency["mcp-server-currency · :8081<br/>convert() · listRates()"]
+    calc["mcp-server-calculator · :8082<br/>add() · subtract() · multiply()"]
+
+    user -->|HTTP| api
+    core -->|"prompt + tool defs"| ollama
+    mcpc -->|MCP / HTTP| currency
+    mcpc -->|MCP / HTTP| calc
 ```
 
 ## Boundaries (invariants — hold these throughout)
@@ -48,6 +50,27 @@ produces a final answer.
 The **step-capture hook** (built in Phase 0) intercepts each tool call and records
 `{ step, tool, server, arguments, result, latencyMs }`. This same step data is the through-line
 of every phase — the project's notion of observability is a human *seeing these steps*.
+
+Over time, a single request flows like this (the loop lives *inside* the ChatClient call):
+
+```mermaid
+sequenceDiagram
+    actor U as Client
+    participant A as agent
+    participant M as Ollama (LLM)
+    participant T as MCP tool server
+    U->>A: POST /agent/run (natural-language request)
+    A->>M: prompt + available tool definitions
+    loop until the model returns a final answer
+        M-->>A: "call tool X with these args"
+        Note over A: step-capture hook records it<br/>(logs · steps · usage · live SSE)
+        A->>T: invoke tool over MCP / HTTP
+        T-->>A: result
+        A->>M: tool result
+    end
+    M-->>A: final answer
+    A-->>U: answer + steps + usage
+```
 
 ## How the picture grows (phase by phase)
 
