@@ -25,9 +25,11 @@ public class RecordingToolCallback implements ToolCallback {
     private static final Logger log = LoggerFactory.getLogger(RecordingToolCallback.class);
 
     private final ToolCallback delegate;
+    private final String server;
 
-    public RecordingToolCallback(ToolCallback delegate) {
+    public RecordingToolCallback(ToolCallback delegate, String server) {
         this.delegate = delegate;
+        this.server = server;
     }
 
     @Override
@@ -52,7 +54,6 @@ public class RecordingToolCallback implements ToolCallback {
 
     private String invoke(String toolInput, ToolContext toolContext) {
         String tool = getToolDefinition().name();
-        String server = serverOf(tool);
         long startNanos = System.nanoTime();
         String result = null;
         String error = null;
@@ -73,13 +74,5 @@ public class RecordingToolCallback implements ToolCallback {
             log.info("[step] tool={} server={} args={} result={} error={} latencyMs={}",
                     tool, server, toolInput, result, error, latencyMs);
         }
-    }
-
-    /**
-     * Best-effort server attribution. Phase 0 has a single server, so this is a constant.
-     * Phase 1 (multi-server) replaces this with real attribution from the MCP connection id.
-     */
-    private static String serverOf(String tool) {
-        return "currency";
     }
 }

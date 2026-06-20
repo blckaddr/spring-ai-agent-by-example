@@ -56,7 +56,7 @@ between sessions. (Contract & rules live in [`CLAUDE.md`](CLAUDE.md); the plan i
 | Phase | Status | Commit | Notes |
 |-------|--------|--------|-------|
 | 0 — sync loop, 1 MCP, step visibility | ☑ done & verified | (see git log) | "convert 100 USD to EUR" → 92.0; steps[] + console log show the convert call. Ports: agent 8080, currency 8081. |
-| 1 — 2nd MCP + dependent multi-step | ☐ not started | — | |
+| 1 — 2nd MCP + dependent multi-step | ☑ done & verified (structure) | (see git log) | calculator server (:8082, 3 tools) added; agent aggregates both; convert×3→add chain + per-server attribution work. Model threads tool outputs unreliably — see observations. |
 | 2 — failure & recovery | ☐ not started | — | |
 | 3 — memory / multi-turn | ☐ not started | — | |
 | 4 — async (202 + runId + poll) | ☐ not started | — | |
@@ -77,4 +77,20 @@ between sessions. (Contract & rules live in [`CLAUDE.md`](CLAUDE.md); the plan i
 > Especially Phase 2: how the loop reacts to tool failures. Also the "weak/non-tool model"
 > experiment from the README — record what actually happens.
 
-- _(add observations here)_
+- **Phase 1 (llama3.1:8b), multi-currency-sum task** — the model's behavior splits cleanly into
+  three traits, each surfaced only by `steps[]`:
+  - *Orchestration order:* with NO system prompt it called `add` prematurely (on raw cross-currency
+    amounts) then did the final sum in its head. Adding ordering guidance to the system prompt
+    reliably fixed this → `convert×3 → add`.
+  - *Argument typing:* the model often emits numbers/arrays as JSON strings (`"100"`,
+    `"[1,2,3]"`), which the MCP server's JSON-schema validation rejects (`string found, number
+    expected`). It then HALLUCINATES results and gives a confident wrong answer. Adding an
+    explicit "pass JSON numbers, not strings" instruction to the system prompt fixed the typing.
+  - *Data threading (unsolved by prompting):* even with correct order + types and all 4 tool calls
+    succeeding, the model does NOT feed the real convert outputs (79.0/42.93/25.16) into `add` —
+    it fabricates the addends every run (e.g. [23.32,21.91,184.19] → 229.42; correct is 147.09).
+    This is a model-capability ceiling for an 8B model, not a code bug.
+  - **Lesson:** the loop infra is correct and fully observable; final accuracy is bottlenecked by
+    the model. Natural next experiment: swap `AGENT_MODEL` to a stronger tool-capable model and
+    re-run — expect the data-threading to improve. (This is the plan's "model drives reliability"
+    point, demonstrated.)

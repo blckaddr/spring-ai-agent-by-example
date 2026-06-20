@@ -21,8 +21,8 @@
 
     <modules>
         <module>mcp-server-currency</module>
+        <module>mcp-server-calculator</module>
         <module>agent</module>
-        <!-- mcp-server-calculator added in Phase 1 -->
     </modules>
 
     <properties>

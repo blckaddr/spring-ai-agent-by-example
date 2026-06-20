@@ -23,6 +23,9 @@ spring:
             currency:
               url: http://localhost:8081
               endpoint: /mcp
+            calculator:
+              url: http://localhost:8082
+              endpoint: /mcp
 
 logging:
   level:
