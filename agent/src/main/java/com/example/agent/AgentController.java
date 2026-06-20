@@ -21,6 +21,6 @@ public class AgentController {
 
     @PostMapping("/run")
     public AgentResponse run(@RequestBody AgentRequest request) {
-        return agentService.run(request.input());
+        return agentService.run(request.input(), request.sessionId());
     }
 }

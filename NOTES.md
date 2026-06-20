@@ -59,7 +59,7 @@ between sessions. (Contract & rules live in [`CLAUDE.md`](CLAUDE.md); the plan i
 | 0 — sync loop, 1 MCP, step visibility | ☑ done & verified | (see git log) | "convert 100 USD to EUR" → 92.0; steps[] + console log show the convert call. Ports: agent 8080, currency 8081. |
 | 1 — 2nd MCP + dependent multi-step | ☑ done & verified (structure) | (see git log) | calculator server (:8082, 3 tools) added; agent aggregates both; convert×3→add chain + per-server attribution work. Model threads tool outputs unreliably — see observations. |
 | 2 — failure & recovery | ☑ done & verified | (see git log) | cleaner error capture in RecordingToolCallback; probed unknown-currency failures with qwen2.5:14b — recovers (apologize/list, or substitute+retry), no hallucination; mid-chain failure halts cleanly. Book Ch5. |
-| 3 — memory / multi-turn | ☐ not started | — | |
+| 3 — memory / multi-turn | ☑ done & verified | (see git log) | MessageChatMemoryAdvisor + MessageWindowChatMemory (in-memory), keyed by sessionId. Turn 2 "that total" resolved from turn 1 via memory; control session had no context (0 steps). Book Ch6. |
 | 4 — async (202 + runId + poll) | ☐ not started | — | |
 | 5 — streaming live (SSE) | ☐ not started | — | |
 | 6 — multi-agent (optional) | ☐ not started | — | build only if asked |

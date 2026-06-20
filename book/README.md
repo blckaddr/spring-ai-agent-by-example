@@ -49,8 +49,10 @@ the wrong answers taught us the most.
    a failure that no prompt could fix simply vanishes.
 5. [When Tools Fail](05-when-tools-fail.md) *(Phase 2)* — we break the tools on purpose and learn
    that a good error message is an agent-design decision.
+6. [Giving It Memory](06-giving-it-memory.md) *(Phase 3)* — the agent stops forgetting between
+   requests, and we learn that memory faithfully carries forward mistakes too.
 
-*(More chapters land as the build continues — memory, async, live streaming.)*
+*(More chapters land as the build continues — async, live streaming.)*
 
 ## The companion materials
 

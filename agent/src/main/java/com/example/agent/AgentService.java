@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.stereotype.Service;
@@ -34,13 +36,22 @@ public class AgentService {
             use numbers: [1.0, 2.0, 3.0], not numbers: "[1.0, 2.0, 3.0]". When you add the
             converted amounts, pass the ACTUAL converted values returned by the convert tool.""";
 
+    /** Phase 3: default conversation when the caller doesn't supply a sessionId. */
+    private static final String DEFAULT_SESSION = "default";
+
     private final ChatClient chatClient;
     private final List<ToolCallback> tools;
 
     public AgentService(ChatClient.Builder chatClientBuilder,
                         ToolCallbackProvider mcpToolProvider,
-                        McpToolServerIndex serverIndex) {
-        this.chatClient = chatClientBuilder.build();
+                        McpToolServerIndex serverIndex,
+                        ChatMemory chatMemory) {
+        // Phase 3: a chat-memory advisor injects prior turns of the conversation (keyed by
+        // conversation id) before each model call and saves the new turn after. State lives in
+        // the ChatMemory store, OUTSIDE the request — never in instance fields (see CLAUDE.md).
+        this.chatClient = chatClientBuilder
+                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
+                .build();
         // Wrap each MCP-provided tool so its invocations are captured. The wrapper is
         // transparent to the model (same tool definition). Server attribution is resolved
         // once, here, from the tool->server index.
@@ -50,12 +61,15 @@ public class AgentService {
                 .toList();
     }
 
-    public AgentResponse run(String request) {
+    public AgentResponse run(String request, String sessionId) {
+        String conversationId = (sessionId == null || sessionId.isBlank()) ? DEFAULT_SESSION : sessionId;
         StepCollector collector = StepCapture.start();
         try {
             String answer = chatClient.prompt()
                     .system(SYSTEM_PROMPT)
                     .user(request)
+                    // Phase 3: select which conversation's memory this call reads/writes.
+                    .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
                     .toolCallbacks(tools)
                     .call()
                     .content();
