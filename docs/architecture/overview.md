@@ -13,7 +13,7 @@ flowchart TB
 
     subgraph agent["agent · Spring Boot · :8080"]
       direction TB
-      api["REST + SSE endpoints<br/>/agent/run (sync) · /agent/runs + /agent/runs/:id (async)<br/>/agent/stream (SSE) · / (chat UI)"]
+      api["REST + SSE endpoints<br/>/agent/run (sync) · /agent/runs + /agent/runs/:id (async)<br/>/agent/stream (SSE) · / (hub) · /chat (chat UI)<br/>/agent/plan + /plan (planning graph)"]
       core["Ollama ChatClient<br/>tool-calling loop (run by Spring AI) · chat memory"]
       hook["step-capture hook — the handrail<br/>logs · steps · usage · live SSE"]
       mcpc["MCP client (streamable-HTTP)"]
@@ -25,11 +25,13 @@ flowchart TB
     ollama[("Ollama — local LLM<br/>:11434 · tool-capable model")]
     currency["mcp-server-currency · :8081<br/>convert() · listRates()"]
     calc["mcp-server-calculator · :8082<br/>add() · subtract() · multiply()"]
+    feestax["mcp-server-feestax · :8083<br/>transactionFee() · taxRate()<br/>(Phase 6 — planning only)"]
 
     user -->|HTTP| api
     core -->|"prompt + tool defs"| ollama
     mcpc -->|MCP / HTTP| currency
     mcpc -->|MCP / HTTP| calc
+    mcpc -->|MCP / HTTP| feestax
 ```
 
 ## Boundaries (invariants — hold these throughout)
@@ -72,6 +74,13 @@ sequenceDiagram
     A-->>U: answer + steps + usage
 ```
 
+**Phase 6's planning path is a different shape.** `POST /agent/plan` is *not* this reactive loop: it
+makes **one tool-less model call** that decomposes the goal into a dependency graph (`PlanService`,
+planning against the discovered `ToolCatalog`), validates it (acyclic, no dangling refs), and returns
+the graph. Nothing is executed — no tool calls, no step-capture loop. The `/plan` page renders that
+graph. (The single-agent chat, meanwhile, is scoped to the currency + calculator servers; the
+fees/tax server exists for the planner's catalog. See book Ch 10–11.)
+
 ## How the picture grows (phase by phase)
 
 | Phase | What changes in this diagram |
@@ -82,7 +91,7 @@ sequenceDiagram
 | 3 | Chat-memory advisor keyed by `sessionId`; follow-ups resolve context. State stays outside the request. |
 | 4 | `POST /agent/run` returns 202 + runId; loop runs detached; a run store persists status + steps; `GET /agent/run/{id}` polls. Safety cap on steps/wall-clock. Sync endpoint stays. |
 | 5 | SSE endpoint pushes each step live as it fires; a single-file HTML page renders them. Same step data, now streamed. |
-| 6 | (optional) planning / multi-agent — agent decomposes goals or delegates. Build only if asked. |
+| 6 | (optional, built) **"Watch it Plan"**: a 3rd MCP server (`feestax`, :8083) joins for a richer domain. `POST /agent/plan` makes ONE tool-less model call that decomposes a goal into a validated **plan graph** (nodes + dependency edges, discovered tools via `ToolCatalog`); `/plan` renders it with Mermaid, grouped by specialist. No execution — the graph is the artifact. Single-agent path untouched. |
 
 ## Tech
 

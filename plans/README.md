@@ -24,7 +24,7 @@ still simple; debugging a loop is far easier synchronously than through async + 
 | 3 | Memory / multi-turn | reasoning | [phase-3-memory.md](phase-3-memory.md) |
 | 4 | Async (202 + runId + poll) | delivery | [phase-4-async.md](phase-4-async.md) |
 | 5 | Streaming the loop live (SSE) | delivery (the "watch it think" goal) | [phase-5-streaming.md](phase-5-streaming.md) |
-| 6 | (frontier, optional) planning / multi-agent | reasoning | [phase-6-multi-agent.md](phase-6-multi-agent.md) |
+| 6 | (frontier, optional) "Watch it Plan" — decompose a goal into a plan graph (no execution) | reasoning | [phase-6-watch-it-plan.md](phase-6-watch-it-plan.md) |
 
 A through-line across all phases: **step visibility** (the "handrail"). Build the capture
 hook once in Phase 0; every later phase logs, persists, or streams the *same* step data.

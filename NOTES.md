@@ -63,11 +63,16 @@ between sessions. (Contract & rules live in [`CLAUDE.md`](CLAUDE.md); the plan i
 | 3.5 — cost/usage observable | ☑ done & verified | (uncommitted) | Response-level usage in AgentResponse.usage: tokens (final round) + wallClockMs (full run) + $ estimate (Pricing table, $0 local). ChatModel-wrapper approach abandoned (loop runs inside the model). Book Ch7. |
 | 4 — async (202 + runId + poll) | ☑ done & verified (uncommitted) | POST /agent/runs -> 202+runId (detached on ThreadPool executor); in-memory RunStore (QUEUED/RUNNING/DONE/FAILED) persists answer+steps+usage; GET /agent/runs/{id} polls. Sync /agent/run kept. eventId idempotency ✓. Safety caps: max-steps (hard FAILED) ✓, max-wall-clock timeout. Book Ch8. |
 | 5 — streaming live (SSE) | ☑ done & verified (uncommitted) | GET /agent/stream (SseEmitter) pushes each Step live via a step listener on the capture hook; static/index.html (EventSource) renders it. Verified via timestamped curl: events smeared across ~45s as the loop runs (not batched). Book Ch9. |
-| 6 — multi-agent (optional) | ☐ not started | — | build only if asked |
+| 6 — "Watch it Plan" (optional) | ☑ done & verified (uncommitted) | Plan-ONLY phase (no execution). New 3rd MCP server `mcp-server-feestax` (:8083, transactionFee/taxRate). `ToolCatalog` discovers all servers' tools over MCP; `PlanService` = one tool-less model call → JSON plan graph `{nodes:[{id,specialist,op,summary,inputs}]}`, validated (unique ids, no dangling refs, acyclic/Kahn). `POST /agent/plan` → {graph,catalog,usage}; `/plan` page renders it with vendored Mermaid (subgraph per specialist). Single-agent path untouched. Earlier "team execution" draft reverted (incl. Step.lane). Book Ch10. |
 
 ## Decisions log
 
 - _(date)_ Plan split into `plans/` overview + per-phase files; added `CLAUDE.md` + `NOTES.md`.
+- _(2026-06-21)_ **Phase 6 re-scoped** from "planning / multi-agent" to **"Watch it Plan"** —
+  plan-only, no execution: the model decomposes a goal into a validated dependency graph, rendered in
+  the browser. The earlier orchestrator + sub-agents *execution* draft was dropped (the per-task
+  sub-agent LLMs were thin one-tool wrappers — pure overhead). Plan file renamed
+  `phase-6-multi-agent.md` → `phase-6-watch-it-plan.md`.
 
 ## Open questions / things to confirm with the human
 
@@ -122,6 +127,55 @@ between sessions. (Contract & rules live in [`CLAUDE.md`](CLAUDE.md); the plan i
     removed. Use response-level capture.
   - *Provider portability:* Usage is provider-neutral → switching to Gemini/OpenAI = swap starter +
     config + add one row to Pricing. Cost grows with loop rounds (context resent) + memory.
+
+- **Phase 6 (qwen2.5:14b), "Watch it Plan" — plan-only, no execution.** Re-scoped from the earlier
+  team-execution draft (dropped: the sub-agent LLMs were thin one-tool wrappers — pure overhead).
+  - *What it does:* `POST /agent/plan` makes ONE tool-less model call; the planner reads the live
+    tool catalog (discovered over MCP from all 3 servers) and returns a JSON plan graph. No tool is
+    ever executed — the graph IS the deliverable, rendered at `/plan` with Mermaid.
+  - *Rich domain works:* added `mcp-server-feestax` (:8083, transactionFee/taxRate, demo values).
+    The consolidation goal produced a **19-node DAG across 4 specialists** (currency 5 / feestax 8 /
+    calculator 5 / orchestrator 1): listRates→converts→(fee,tax)→multiply→add→select. Valid
+    (acyclic, all refs resolve). 1,339 tokens, 1 call, ~59s.
+  - *Plan quality — initially imperfect, then fixed via the planner prompt:* the FIRST planner
+    collapsed comparison goals to USD-only (no real comparison), misfiled `convert` under
+    calculator-tools, and used an odd `multiply(value, taxRate, fee)`. The graph made the flaw
+    obvious (a "cheapest" select with ONE input). Fix = planner-prompt guidance: enumerate candidates
+    + one branch per candidate for cheapest/best goals; attribute each op to its real server; keep
+    units consistent. After: EX1 simple ✓, EX2 portfolio ✓, EX3 cheapest-of-3 → branches per
+    candidate + select over all 3, **4/4 valid, 0 misfiled ops**. Residual: 5-holding consolidation
+    sometimes drops a node ref (too big for 14b) → validator 422 → re-run. Non-deterministic.
+  - *Validation earns its keep:* PlanService rejects non-JSON, duplicate ids, dangling `inputs`, and
+    cycles (Kahn's), throwing PlanException with the raw text → 422 shown on the page.
+  - *REGRESSION (toolset bleed) — full saga, see book Ch 11.* Adding the feestax MCP connection grew
+    the **chat's** toolset 5→7 (the agent wraps ALL connected MCP tools). qwen2.5:14b then failed the
+    basic GBP-sum (skipped USD, called `add` on raw amounts, even fabricated inputs). Notable: the
+    mere PRESENCE of the 2 extra tools degraded threading even when they were never called.
+    - *Experiments (all measured):* (a) prompt domain-steering → stopped fee/tax leakage but NOT the
+      mis-threading; (b) few-shot worked example → ~75-80% but couples the prompt to the toolset
+      (felt like prompt fine-tuning — rejected); (c) **bigger LOCAL model** `qwen2.5:32b` (19 GB,
+      ~30s/run) → converted perfectly then fed `add` FABRICATED numbers `[83.33,41.67,32.91]`=157.91,
+      **consistently** (4/4), ignoring its own tool results despite the explicit "pass returned
+      values" rule. Bigger ≠ reliable; capability ≠ faithfulness to tool outputs.
+    - *Shipped fix (Option A):* (1) **whitelist** the chat's servers — `agent.chat.tool-servers:
+      currency-tools,calculator-tools` (include-list, not blacklist, so future servers stay out by
+      default; planner still sees all via ToolCatalog); (2) **order** the tools currency-before-
+      calculator so the model meets convert before add — this alone flipped ~2/4 → **6/6**. System
+      prompt back to PLAIN (no catalog, no worked example). Fast 14b. feestax → planner only.
+    - *Lessons:* more tools degrade a small model even when unused; tool **selection + order** are
+      real reliability levers; a small local model is probabilistic at multi-step tool threading —
+      mitigate (scope+order) or change the knob that matters (a frontier hosted model: Claude/Gemini
+      handle the full 7-tool set directly; switching = swap starter + config + a Pricing row, thanks
+      to the provider-neutral ChatClient/Usage from Ch 7).
+    - *Model note:* `qwen2.5:32b` pulled (19 GB) for the experiment; NOT the default (slower, heavier,
+      no reliability gain). `ollama rm qwen2.5:32b` to reclaim space. Added to Pricing as local/$0.
+  - *Mermaid gotcha:* `mermaid@11 dist/mermaid.min.js` is a **UMD/global** build (sets
+    `globalThis.mermaid`), NOT an ESM module — `import mermaid from …` yields undefined. Load it as a
+    classic `<script src>` and use the global. (The ESM build is `mermaid.esm.min.mjs` + chunks,
+    not a single vendorable file.)
+  - *Version gotcha (still true):* Boot 4.1 ships **Jackson 3** — `tools.jackson.databind.ObjectMapper`
+    (not `com.fasterxml.jackson.databind`), exceptions unchecked (`tools.jackson.core.JacksonException`).
+    Annotations stay on `com.fasterxml.jackson` 2.x.
 
 - **Model-swap experiment (qwen2.5:14b) — RESOLVES layer 3.** Same code, same prompts, only
   `AGENT_MODEL=qwen2.5:14b`. The model threads its own convert outputs into `add`:

@@ -15,6 +15,7 @@ API keys, no cost.
 | `agent` | 8080 | the orchestrator — Ollama ChatClient + MCP client + REST/SSE endpoints |
 | `mcp-server-currency` | 8081 | a tool server — `convert()`, `listRates()` |
 | `mcp-server-calculator` | 8082 | a tool server — `add()`, `subtract()`, `multiply()` |
+| `mcp-server-feestax` | 8083 | a tool server — `transactionFee()`, `taxRate()` (used by the Phase-6 planning page) |
 
 The agent reaches the tools **only over MCP/HTTP**, never by importing their code — same as a real
 deployment. Stack: Spring AI 2.0 + Spring Boot 4 + Java 21.
@@ -34,19 +35,21 @@ deployment. Stack: Spring AI 2.0 + Spring Boot 4 + Java 21.
 ## Run it
 
 1. **Start Ollama:** `ollama serve` (or launch the desktop app).
-2. **Start the three services** — tool servers first, then the agent (it connects to them on
+2. **Start the four services** — tool servers first, then the agent (it connects to them on
    startup). Either run the helper script:
    ```bash
-   ./scripts/run-all.sh        # starts all three, waits until ready; logs in ./logs
+   ./scripts/run-all.sh        # starts all four, waits until ready; logs in ./logs
    ./scripts/stop-all.sh       # stops them
    ```
    …or run each in its own terminal:
    ```bash
    mvn -pl mcp-server-currency   spring-boot:run        # :8081
    mvn -pl mcp-server-calculator spring-boot:run        # :8082
+   mvn -pl mcp-server-feestax    spring-boot:run        # :8083
    AGENT_MODEL=qwen2.5:14b mvn -pl agent spring-boot:run # :8080
    ```
-3. **Watch it think:** open <http://localhost:8080/> in a browser and hit **Run**.
+3. **Open the hub:** <http://localhost:8080/> — a landing page linking to **Watch it think**
+   (the chat, `/chat`) and **Watch it plan** (the planning graph, `/plan`, Phase 6).
 
 ## Smoke test (60 seconds)
 

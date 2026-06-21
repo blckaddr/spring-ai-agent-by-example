@@ -31,9 +31,9 @@ instead of collected for later.
   and, via a step listener, pushes each step onto a **Server-Sent Events** stream as it happens,
   then a final `answer` event (with the cost/usage block) and `done`. GET, so a browser's native
   `EventSource` can connect.
-- **A single HTML page** (`static/index.html`) — a text box, a button, and a styled timeline that
-  renders each step live as it streams in. No framework, just the browser's `EventSource`. Open
-  `http://localhost:8080/` and watch.
+- **A single HTML page** (`static/chat.html`, served at `/chat`) — a text box, a button, and a styled
+  timeline that renders each step live as it streams in. No framework, just the browser's
+  `EventSource`. Open `http://localhost:8080/chat` and watch.
 
 The same step data flows everywhere now: logged (0), chained (1), error-annotated (2),
 context-aware (3), priced (3.5), persisted (4), and finally **streamed live (5)** — one hook, six
@@ -130,7 +130,8 @@ a glass-box agent you can see straight through.
 
 ## Try it yourself
 
-Open <http://localhost:8080/> and hit **Run** — watch the steps stream in live. Or consume the raw
+Open <http://localhost:8080/chat> and hit **Run** — watch the steps stream in live. (The root
+<http://localhost:8080/> is now a hub linking to the chat and the planner.) Or consume the raw
 event stream from the terminal:
 
 ```bash

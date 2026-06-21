@@ -22,6 +22,7 @@
     <modules>
         <module>mcp-server-currency</module>
         <module>mcp-server-calculator</module>
+        <module>mcp-server-feestax</module>
         <module>agent</module>
     </modules>
 

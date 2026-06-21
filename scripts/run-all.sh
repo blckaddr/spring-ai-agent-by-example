@@ -32,10 +32,11 @@ wait_port() { # port
 # tool servers first (the agent connects to them on startup), then the agent
 start mcp-server-currency   mcp-server-currency   8081
 start mcp-server-calculator mcp-server-calculator 8082
-wait_port 8081; wait_port 8082
+start mcp-server-feestax    mcp-server-feestax    8083
+wait_port 8081; wait_port 8082; wait_port 8083
 start agent agent 8080
 wait_port 8080
 
 echo
-echo "✓ ready — open http://localhost:8080/"
+echo "✓ ready — open http://localhost:8080/  (hub → /chat · /plan)"
 echo "  logs in ./logs · stop with ./scripts/stop-all.sh"

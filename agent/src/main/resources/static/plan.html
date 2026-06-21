@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Watch the Agent Plan</title>
+<style>
+  :root{
+    --ink:#0f172a; --muted:#64748b; --card:#ffffffe6;
+    --accent:#6366f1; --accent2:#818cf8; --ok:#10b981; --err:#ef4444;
+    --line:#e2e8f0; --chip:#eef2ff; --chipink:#4338ca;
+    --cur:#8b5cf6; --calc:#f59e0b; --fee:#10b981; --orch:#0ea5e9;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+    background:radial-gradient(900px 520px at 12% -8%,#e2e8f0aa 0%,transparent 60%),
+               radial-gradient(820px 520px at 108% 2%,#e5e7ebaa 0%,transparent 55%),
+               linear-gradient(160deg,#f8fafc,#eef1f5);
+    background-attachment:fixed;
+  }
+  .app{max-width:1100px;margin:0 auto;height:100dvh;display:flex;flex-direction:column;padding:1.1rem 1.2rem}
+
+  header{flex:none;margin-bottom:.5rem}
+  .headrow{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem}
+  .eyebrow{font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:700}
+  h1{font-size:1.55rem;margin:.2rem 0 .3rem;font-weight:700;letter-spacing:-.02em}
+  .tip{margin:0;font-size:.85rem;color:var(--muted)}
+  .tip code{background:var(--chip);color:var(--chipink);padding:.05rem .35rem;border-radius:5px}
+  .nav{display:flex;gap:.2rem;align-items:center}
+  .ghost{border:0;background:transparent;color:var(--muted);font:inherit;font-size:.85rem;cursor:pointer;text-decoration:none;padding:.3rem .5rem;border-radius:8px;white-space:nowrap}
+  .ghost:hover{color:var(--accent);background:#6366f114}
+
+  .scroll{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:.7rem;padding:.3rem 0 .4rem}
+  .empty{margin:auto;color:var(--muted);font-size:.95rem;text-align:center;opacity:.8;padding:3rem 1rem}
+  .planblock{display:flex;flex-direction:column;gap:.55rem;padding-bottom:1.1rem;border-bottom:1px dashed var(--line)}
+  .planblock:last-child{border-bottom:0}
+  /* fill bottom-up (consistent with the chat): the first block is pushed to the bottom */
+  .scroll > .planblock:first-child{margin-top:auto}
+  .goal{font-size:.95rem;color:#334155}
+  .goal b{color:var(--accent);font-weight:700;letter-spacing:.04em;font-size:.74rem;text-transform:uppercase;display:block;margin-bottom:.15rem}
+
+  .graph{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:1rem;
+    box-shadow:0 12px 28px -20px #0009;cursor:zoom-in;position:relative}
+  .graph svg{max-width:100%;height:auto;display:block;margin:0 auto}
+  .graph .hint{position:absolute;top:.5rem;right:.7rem;font-size:.72rem;color:var(--muted);
+    background:#ffffffcc;border:1px solid var(--line);border-radius:999px;padding:.1rem .5rem;pointer-events:none}
+
+  /* fullscreen overlay for a graph */
+  .overlay{position:fixed;inset:0;z-index:50;display:none;flex-direction:column;
+    padding:1.6rem 1.8rem;background:#0f172acc;backdrop-filter:blur(3px)}
+  .overlay.open{display:flex}
+  .overlay .bar{flex:none;display:flex;justify-content:space-between;align-items:center;color:#fff;margin-bottom:.6rem}
+  .overlay .bar .t{font-size:.85rem;opacity:.85}
+  .overlay .x{cursor:pointer;border:0;background:#ffffff22;color:#fff;font:inherit;font-size:.9rem;
+    border-radius:9px;padding:.4rem .8rem}
+  .overlay .x:hover{background:#ffffff38}
+  .overlay .stage{flex:1;min-height:0;overflow:hidden;position:relative;background:#fff;border-radius:12px;cursor:grab}
+  .overlay .stage.grabbing{cursor:grabbing}
+  .overlay .stage svg{position:absolute;top:0;left:0;transform-origin:0 0;will-change:transform;max-width:none}
+  .overlay .zoomctl{display:flex;gap:.35rem;align-items:center}
+  .overlay .zb{cursor:pointer;border:0;background:#ffffff22;color:#fff;font:inherit;font-size:.95rem;
+    border-radius:9px;padding:.35rem .7rem;min-width:2.1rem}
+  .overlay .zb:hover{background:#ffffff38}
+
+  .legend{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;font-size:.8rem;color:var(--muted)}
+  .pill{display:inline-flex;align-items:center;gap:.35rem;background:#ffffffcc;border:1px solid var(--line);
+    border-radius:999px;padding:.2rem .6rem}
+  .pill .sw{width:10px;height:10px;border-radius:3px}
+
+  .stats{display:flex;gap:.5rem;flex-wrap:wrap}
+  .stat{background:#1e293b0d;border-radius:10px;padding:.4rem .7rem;font-size:.8rem;color:#334155}
+  .stat b{display:block;font-size:1rem;color:var(--ink);font-variant-numeric:tabular-nums}
+
+  details.catalog{font-size:.82rem;color:#334155;background:#ffffff80;border:1px solid var(--line);border-radius:12px;padding:.5rem .8rem}
+  details.catalog summary{cursor:pointer;color:var(--muted);font-weight:600}
+  details.catalog code{background:var(--chip);color:var(--chipink);padding:.02rem .3rem;border-radius:4px}
+  .catrow{margin:.3rem 0 0}
+
+  .error{background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:.8rem 1rem;color:#7f1d1d;font-size:.9rem}
+  .error pre{white-space:pre-wrap;word-break:break-word;background:#fff;border-radius:8px;padding:.5rem;margin:.5rem 0 0;font-size:.78rem;color:#334155}
+  .thinking{display:flex;align-items:center;gap:.6rem;color:#4f46e5;font-size:.92rem;padding:.2rem}
+  .dots{display:inline-flex;gap:.25rem}
+  .dots i{width:7px;height:7px;border-radius:50%;background:#a5b4fc;animation:b 1s infinite ease-in-out}
+  .dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}
+  @keyframes b{0%,80%,100%{opacity:.3;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
+
+  form.composer{flex:none;margin-top:.5rem;display:flex;gap:.5rem;align-items:flex-end;background:var(--card);backdrop-filter:blur(8px);
+    padding:.5rem;border-radius:16px;box-shadow:0 -10px 30px -18px #0007, 0 12px 30px -18px #0006}
+  .composer textarea{flex:1;border:0;background:transparent;font:inherit;font-size:1rem;color:var(--ink);padding:.7rem .8rem;
+    outline:none;resize:none;line-height:1.45;max-height:40vh;overflow-y:auto}
+  .composer button{flex:none;border:0;border-radius:11px;cursor:pointer;font:inherit;font-weight:600;color:#fff;padding:.7rem 1.4rem;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 8px 20px -8px var(--accent);transition:transform .08s ease,opacity .2s}
+  .composer button:hover{transform:translateY(-1px)} .composer button:disabled{opacity:.55;cursor:default;transform:none}
+</style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="headrow">
+        <div>
+          <div class="eyebrow">Spring AI · MCP tools · planning</div>
+          <h1>Watch the agent plan</h1>
+        </div>
+        <div class="nav">
+          <a class="ghost" href="/">🏠 Home</a>
+          <a class="ghost" href="/chat">💬 Chat</a>
+          <button id="clear" class="ghost" type="button">↻ Clear</button>
+        </div>
+      </div>
+      <p class="tip">The model turns one goal into a <strong>plan graph</strong> — sub-tasks (nodes) and
+        their data dependencies (arrows), grouped by which <strong>specialist</strong> would run them.
+        It only <em>plans</em>; nothing is executed. Enter a goal below — <strong>each query adds a new
+        graph</strong>, so you can compare how different goals (or re-runs of the same one) decompose.</p>
+    </header>
+
+    <div class="scroll" id="scroll">
+      <div class="empty" id="empty">Enter a goal below to see its plan graph ↓</div>
+    </div>
+
+    <form class="composer" id="f">
+      <textarea id="input" rows="1" autocomplete="off"
+             >What's the cheapest currency to consolidate 100 USD, 200 CAD and 80 CHF into, after transaction fees and tax?</textarea>
+      <button id="go" type="submit">Plan ▸</button>
+    </form>
+  </div>
+
+  <div class="overlay" id="overlay">
+    <div class="bar">
+      <span class="t">scroll to zoom · drag to pan · Esc to close</span>
+      <div class="zoomctl">
+        <button class="zb" id="zoomOut" type="button" title="Zoom out">−</button>
+        <button class="zb" id="zoomReset" type="button" title="Reset / fit">Reset</button>
+        <button class="zb" id="zoomIn" type="button" title="Zoom in">+</button>
+        <button class="x" id="overlayClose" type="button">✕ Close</button>
+      </div>
+    </div>
+    <div class="stage" id="overlayStage"></div>
+  </div>
+
+<script src="/vendor/mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad:false, theme:'neutral', securityLevel:'loose',
+                       flowchart:{ useMaxWidth:true, htmlLabels:true, curve:'basis' } });
+
+  const form = document.getElementById('f');
+  const inputEl = document.getElementById('input');
+  const go = document.getElementById('go');
+  const scroll = document.getElementById('scroll');
+  const toBottom = () => { scroll.scrollTop = scroll.scrollHeight; };
+  let seq = 0;
+
+  // multi-line input: auto-grow to fit content (capped), Enter submits, Shift+Enter = newline
+  const autogrow = () => { inputEl.style.height = 'auto'; inputEl.style.height = Math.min(inputEl.scrollHeight, window.innerHeight * 0.4) + 'px'; };
+  inputEl.addEventListener('input', autogrow);
+  inputEl.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); } });
+  window.addEventListener('load', autogrow);
+  autogrow();
+
+  const CLS = { 'currency-tools':'cur', 'calculator-tools':'calc', 'feestax-tools':'fee' };
+  const SWATCH = { cur:'#8b5cf6', calc:'#f59e0b', fee:'#10b981', orch:'#0ea5e9' };
+  const classOf = spec => CLS[spec] || 'orch';
+  const nid = id => 'n_' + String(id).replace(/[^a-zA-Z0-9_]/g, '_');
+  const esc = s => String(s ?? '').replace(/[\n\r]+/g,' ').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+  function buildDef(graph){
+    let s = 'flowchart TD\n';
+    const groups = {};
+    graph.nodes.forEach(n => (groups[n.specialist] ||= []).push(n));
+    let i = 0;
+    for (const [spec, list] of Object.entries(groups)){
+      s += `subgraph sg${i} ["${esc(spec)}"]\n`;
+      list.forEach(n => {
+        s += `  ${nid(n.id)}["<b>${esc(n.op)}</b><br/><span style='font-size:.8em'>${esc(n.summary)}</span>"]\n`;
+      });
+      s += 'end\n';
+      i++;
+    }
+    graph.nodes.forEach(n => (n.inputs||[]).forEach(dep => { s += `${nid(dep)} --> ${nid(n.id)}\n`; }));
+    graph.nodes.forEach(n => { s += `class ${nid(n.id)} ${classOf(n.specialist)}\n`; });
+    s += 'classDef cur fill:#ede9fe,stroke:#8b5cf6,color:#3b0764\n';
+    s += 'classDef calc fill:#fef3c7,stroke:#f59e0b,color:#451a03\n';
+    s += 'classDef fee fill:#d1fae5,stroke:#10b981,color:#064e3b\n';
+    s += 'classDef orch fill:#e0f2fe,stroke:#0ea5e9,color:#082f49\n';
+    return s;
+  }
+
+  function legend(graph){
+    const specs = [...new Set(graph.nodes.map(n => n.specialist))];
+    return `<div class="legend">${specs.map(sp => {
+      const c = SWATCH[classOf(sp)];
+      return `<span class="pill"><span class="sw" style="background:${c}"></span>${esc(sp)}</span>`;
+    }).join('')}</div>`;
+  }
+
+  function statsHtml(u, nodeCount){
+    u = u || {};
+    return `<div class="stats">
+      <div class="stat">nodes<b>${nodeCount ?? '–'}</b></div>
+      <div class="stat">tokens<b class="num">${u.totalTokens ?? '–'}</b></div>
+      <div class="stat">model calls<b>1</b></div>
+      <div class="stat">wall-clock<b>${u.wallClockMs!=null ? (u.wallClockMs/1000).toFixed(1)+'s' : '–'}</b></div>
+      <div class="stat">model<b>${esc(u.model ?? '–')}</b></div>
+    </div>`;
+  }
+
+  function catalogHtml(catalog){
+    const byServer = {};
+    (catalog||[]).forEach(t => (byServer[t.server] ||= []).push(t));
+    const rows = Object.entries(byServer).map(([srv, tools]) =>
+      `<div class="catrow"><strong>${esc(srv)}</strong>: ${tools.map(t => `<code>${esc(t.name)}(${(t.params||[]).map(esc).join(', ')})</code>`).join(' ')}</div>`
+    ).join('');
+    return `<details class="catalog"><summary>Tools the planner could use (discovered over MCP)</summary>${rows}</details>`;
+  }
+
+  function thinking(){ return `<div class="thinking"><span class="dots"><i></i><i></i><i></i></span> the agent is planning…</div>`; }
+
+  async function plan(input){
+    const empty = document.getElementById('empty');
+    if (empty) empty.remove();
+    const id = ++seq;
+    const goalLine = `<div class="goal"><b>Goal</b>${esc(input)}</div>`;
+    const block = document.createElement('div');
+    block.className = 'planblock';
+    block.innerHTML = goalLine + thinking();
+    scroll.appendChild(block);
+    toBottom();
+    try {
+      const res = await fetch('/agent/plan', {
+        method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ input })
+      });
+      const data = await res.json();
+      if (!res.ok){
+        block.innerHTML = goalLine + `<div class="error"><strong>The planner produced an invalid plan.</strong><br/>${esc(data.error)}
+          ${data.raw ? `<pre>${esc(data.raw)}</pre>` : ''}</div>`;
+        toBottom();
+        return;
+      }
+      const g = data.graph;
+      block.innerHTML = goalLine
+        + statsHtml(data.usage, g.nodes.length) + legend(g)
+        + `<div class="graph" id="graph${id}" title="Click to enlarge"><span class="hint">⤢ click to enlarge</span></div>`
+        + catalogHtml(data.catalog);
+      const { svg } = await mermaid.render('plan_svg_' + id, buildDef(g));
+      block.querySelector('#graph' + id).insertAdjacentHTML('beforeend', svg);
+      toBottom();
+    } catch (ex){
+      block.innerHTML = goalLine + `<div class="error">Request failed: ${esc(ex.message || ex)}</div>`;
+      toBottom();
+    }
+  }
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const input = inputEl.value.trim();
+    if (!input || go.disabled) return;
+    go.disabled = true;
+    try { await plan(input); } finally { go.disabled = false; inputEl.focus(); }
+  });
+
+  document.getElementById('clear').addEventListener('click', () => {
+    scroll.innerHTML = '<div class="empty" id="empty">Enter a goal below to see its plan graph ↓</div>';
+    seq = 0;
+    inputEl.focus();
+  });
+
+  // --- fullscreen graph overlay with zoom + pan ---
+  const overlay = document.getElementById('overlay');
+  const overlayStage = document.getElementById('overlayStage');
+  const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+  let zSvg = null, zScale = 1, zTx = 0, zTy = 0, zNatW = 0, zNatH = 0;
+  const MIN = 0.1, MAX = 8;
+
+  const applyZoom = () => { if (zSvg) zSvg.style.transform = `translate(${zTx}px,${zTy}px) scale(${zScale})`; };
+
+  function fitToStage(){
+    const cb = overlayStage.getBoundingClientRect();
+    if (!zNatW || !zNatH) return;
+    zScale = Math.min(cb.width / zNatW, cb.height / zNatH) * 0.98 || 1;
+    zTx = (cb.width - zNatW * zScale) / 2;
+    zTy = (cb.height - zNatH * zScale) / 2;
+    applyZoom();
+  }
+
+  // zoom keeping the point (cx,cy) — relative to the stage — fixed under the cursor
+  function zoomAt(cx, cy, factor){
+    const newScale = clamp(zScale * factor, MIN, MAX);
+    zTx = cx - (cx - zTx) * (newScale / zScale);
+    zTy = cy - (cy - zTy) * (newScale / zScale);
+    zScale = newScale;
+    applyZoom();
+  }
+  function zoomCenter(factor){
+    const cb = overlayStage.getBoundingClientRect();
+    zoomAt(cb.width / 2, cb.height / 2, factor);
+  }
+
+  function openOverlay(svgEl){
+    const clone = svgEl.cloneNode(true);
+    const vb = (clone.getAttribute('viewBox') || '').split(/[\s,]+/).map(Number);
+    zNatW = vb[2] || svgEl.getBoundingClientRect().width || 800;
+    zNatH = vb[3] || svgEl.getBoundingClientRect().height || 600;
+    clone.removeAttribute('width'); clone.removeAttribute('height');
+    clone.style.maxWidth = 'none';
+    clone.style.width = zNatW + 'px';
+    clone.style.height = zNatH + 'px';
+    overlayStage.innerHTML = '';
+    overlayStage.appendChild(clone);
+    zSvg = clone;
+    overlay.classList.add('open');
+    requestAnimationFrame(fitToStage);   // fit once the stage has its size
+  }
+  function closeOverlay(){ overlay.classList.remove('open'); overlayStage.innerHTML = ''; zSvg = null; }
+
+  // delegate: click any rendered graph to enlarge it
+  scroll.addEventListener('click', e => {
+    const g = e.target.closest('.graph');
+    if (!g) return;
+    const svg = g.querySelector('svg');
+    if (svg) openOverlay(svg);
+  });
+
+  // wheel = zoom at cursor
+  overlayStage.addEventListener('wheel', e => {
+    if (!zSvg) return;
+    e.preventDefault();
+    const r = overlayStage.getBoundingClientRect();
+    zoomAt(e.clientX - r.left, e.clientY - r.top, e.deltaY < 0 ? 1.12 : 1 / 1.12);
+  }, { passive: false });
+
+  // drag = pan
+  let dragging = false, panSx = 0, panSy = 0;
+  overlayStage.addEventListener('mousedown', e => {
+    if (!zSvg) return;
+    dragging = true; panSx = e.clientX - zTx; panSy = e.clientY - zTy;
+    overlayStage.classList.add('grabbing'); e.preventDefault();
+  });
+  window.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    zTx = e.clientX - panSx; zTy = e.clientY - panSy; applyZoom();
+  });
+  window.addEventListener('mouseup', () => { dragging = false; overlayStage.classList.remove('grabbing'); });
+
+  document.getElementById('zoomIn').addEventListener('click', () => zoomCenter(1.25));
+  document.getElementById('zoomOut').addEventListener('click', () => zoomCenter(1 / 1.25));
+  document.getElementById('zoomReset').addEventListener('click', fitToStage);
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeOverlay(); });
+  document.getElementById('overlayClose').addEventListener('click', closeOverlay);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeOverlay(); });
+</script>
+</body>
+</html>

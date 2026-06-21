@@ -2,7 +2,11 @@ package com.example.agent;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
@@ -46,6 +50,8 @@ public class AgentService {
     /** Phase 3: default conversation when the caller doesn't supply a sessionId. */
     private static final String DEFAULT_SESSION = "default";
 
+    private static final Logger log = LoggerFactory.getLogger(AgentService.class);
+
     private final ChatClient chatClient;
     private final List<ToolCallback> tools;
     private final int maxSteps;
@@ -54,7 +60,8 @@ public class AgentService {
                         ToolCallbackProvider mcpToolProvider,
                         McpToolServerIndex serverIndex,
                         ChatMemory chatMemory,
-                        @org.springframework.beans.factory.annotation.Value("${agent.safety.max-steps:20}") int maxSteps) {
+                        @org.springframework.beans.factory.annotation.Value("${agent.safety.max-steps:20}") int maxSteps,
+                        @org.springframework.beans.factory.annotation.Value("${agent.chat.tool-servers:currency-tools,calculator-tools}") String includeServersCsv) {
         this.maxSteps = maxSteps;
         // Phase 3: a chat-memory advisor injects prior turns of the conversation (keyed by
         // conversation id) before each model call and saves the new turn after. State lives in
@@ -62,13 +69,31 @@ public class AgentService {
         this.chatClient = chatClientBuilder
                 .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
                 .build();
-        // Wrap each MCP-provided tool so its invocations are captured. The wrapper is
-        // transparent to the model (same tool definition). Server attribution is resolved
-        // once, here, from the tool->server index.
+        // Scope the chat to the servers it needs, by an INCLUDE list (whitelist): the chat is a
+        // currency+calculator assistant. The Phase-6 fees/tax server is planning-only; including it
+        // measurably degraded this small local model's multi-step reasoning, and neither prompt
+        // tweaks nor a bigger local model fixed it reliably (see book Ch 11). A whitelist (vs a
+        // blacklist) means any FUTURE server stays out of the chat by default until opted in. The
+        // PLANNER still discovers every server via ToolCatalog. Config-driven via McpToolServerIndex
+        // — no hardcoded names here. An empty list means "include all" (the original behaviour).
+        List<String> order = Arrays.stream(includeServersCsv.split(","))
+                .map(String::trim).filter(s -> !s.isEmpty()).toList();
+        Set<String> include = Set.copyOf(order);
+        // Present the tools in the whitelist's order (currency before calculator) so the model meets
+        // conversion tools before aggregation tools — it nudges "convert first, then add" and avoids
+        // premature add on raw amounts. (Tool order genuinely affects a small model's choices.)
         this.tools = Arrays.stream(mcpToolProvider.getToolCallbacks())
+                .filter(tc -> include.isEmpty() || include.contains(serverIndex.serverFor(tc.getToolDefinition().name())))
+                .sorted(java.util.Comparator.comparingInt(tc -> {
+                    int i = order.indexOf(serverIndex.serverFor(tc.getToolDefinition().name()));
+                    return i < 0 ? Integer.MAX_VALUE : i;
+                }))
                 .map(tc -> (ToolCallback) new RecordingToolCallback(
                         tc, serverIndex.serverFor(tc.getToolDefinition().name())))
                 .toList();
+        log.info("chat agent toolset ({} tools, servers={}): {}", tools.size(),
+                include.isEmpty() ? "ALL" : order,
+                tools.stream().map(t -> t.getToolDefinition().name()).toList());
     }
 
     public AgentResponse run(String request, String sessionId) {

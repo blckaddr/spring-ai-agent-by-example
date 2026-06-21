@@ -27,5 +27,5 @@ The human watches steps appear one by one in real time as the agent works.
 
 ## Next
 
-[Phase 6](phase-6-multi-agent.md) — optional frontier: planning / multi-agent. Build only if
-asked.
+[Phase 6](phase-6-watch-it-plan.md) — optional frontier: "Watch it Plan" — the model decomposes a
+goal into a plan graph (rendered, not executed). Build only if asked.

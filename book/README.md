@@ -55,8 +55,15 @@ the wrong answers taught us the most.
    observable, hit a wrong-layer dead end, and learn what's easy vs hard about cost.
 8. [Letting It Run Detached](08-letting-it-run-detached.md) *(Phase 4)* — kick off, poll later; the
    run outlives the request, and unattended loops need guard rails.
-9. [Watching It Think](09-watching-it-think.md) *(Phase 5)* — the finale: each step pushed live over
-   SSE, with a tiny HTML page. The "watch it think" goal, achieved almost for free thanks to Ch 2.
+9. [Watching It Think](09-watching-it-think.md) *(Phase 5)* — each step pushed live over SSE, with a
+   tiny HTML page. The "watch it think" goal, achieved almost for free thanks to Ch 2.
+10. [Watch it Plan](10-watch-it-plan.md) *(Phase 6 · bonus)* — the frontier: the model turns a goal
+    into a *plan graph* we render but never execute — isolating decomposition as the one thing an LLM
+    is genuinely good at here, flaws visible and all.
+11. [When the Toolset Grows](11-when-the-toolset-grows.md) *(Phase 6 · debugging story)* — adding a
+    third tool domain quietly broke the chat; the experiments that followed (prompt hacks, a bigger
+    local model that *still* fabricated the sum, then scope + order) — and what a hosted Claude/Gemini
+    would change.
 
 ## Running it while you read
 

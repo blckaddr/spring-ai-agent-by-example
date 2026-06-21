@@ -1,0 +1,19 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: mcp-server-feestax
+  ai:
+    mcp:
+      server:
+        protocol: STREAMABLE
+        type: SYNC
+        name: feestax-tools
+        version: 0.0.1
+        streamable-http:
+          mcp-endpoint: /mcp        # tools served at http://localhost:8083/mcp
+
+logging:
+  level:
+    org.springframework.ai: INFO

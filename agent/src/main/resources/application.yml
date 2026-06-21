@@ -26,8 +26,17 @@ spring:
             calculator:
               url: http://localhost:8082
               endpoint: /mcp
+            feestax:                  # Phase 6: a 3rd specialist server, for richer planning
+              url: http://localhost:8083
+              endpoint: /mcp
 
 agent:
+  chat:
+    # The single-agent chat is a currency + calculator assistant. INCLUDE list (whitelist) of MCP
+    # server names it may use — anything else (e.g. the Phase-6 planning-only feestax server) stays
+    # out, which keeps the small local model reliable. The planner (PlanService) still sees ALL
+    # servers via the tool catalog. Blank = include all. See book Ch 11 for why.
+    tool-servers: currency-tools,calculator-tools
   async:
     pool-size: 4              # background workers for detached runs (Phase 4)
   safety:
