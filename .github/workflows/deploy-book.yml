@@ -1,0 +1,67 @@
+# Builds book/ with mdBook and publishes it to GitHub Pages.
+#
+# The book/*.md sources are never modified or committed. This job checks out a
+# fresh copy, rewrites the parent-relative (../) links to GitHub blob URLs in
+# that copy only, builds, and deploys. To take the site down: Settings → Pages →
+# Source: None (the URL 404s immediately); delete this file to remove the build.
+name: Deploy book to Pages
+
+on:
+  # Manual-only for now so nothing publishes until you opt in. Once you're happy,
+  # uncomment the push trigger to rebuild on every change to the book.
+  workflow_dispatch:
+  # push:
+  #   branches: [main]
+  #   paths: ['book/**', 'book.toml', '.github/workflows/deploy-book.yml']
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow one concurrent deployment; don't cancel an in-progress publish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      MDBOOK_VERSION: "0.4.40"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install mdBook
+        run: |
+          url="https://github.com/rust-lang/mdBook/releases/download/v${MDBOOK_VERSION}/mdbook-v${MDBOOK_VERSION}-x86_64-unknown-linux-gnu.tar.gz"
+          mkdir -p "$HOME/.local/bin"
+          curl -sSL "$url" | tar -xz -C "$HOME/.local/bin"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Rewrite parent-relative links to GitHub URLs (build copy only)
+        run: |
+          base="https://github.com/${GITHUB_REPOSITORY}/blob/main"
+          # Turn ](../some/path  into  ](https://github.com/<owner>/<repo>/blob/main/some/path
+          # Only top-level book/*.md have these; image links use ](images/...) and are untouched.
+          find book -maxdepth 1 -name '*.md' -type f -print0 \
+            | xargs -0 sed -i "s#](\.\./#](${base}/#g"
+
+      - name: Build
+        run: mdbook build
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

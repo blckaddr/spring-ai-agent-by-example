@@ -20,3 +20,6 @@ target/
 
 # run-all.sh output
 logs/
+
+# mdBook build output (book site)
+site/

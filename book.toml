@@ -1,0 +1,29 @@
+# mdBook configuration — builds the prose in book/ into a static site.
+# The book/*.md sources are NOT modified; the deploy workflow rewrites the
+# parent-relative (../) links to GitHub URLs in a throwaway copy at build time.
+[book]
+title = "Building an Agent, One Concept at a Time"
+authors = ["blckaddr"]
+description = "A learning journal — how a Spring AI agent that calls tools actually works, built one concept at a time."
+src = "book"
+language = "en"
+
+[build]
+# src is "book", so the default build-dir ("book") would collide — output elsewhere.
+build-dir = "site"
+
+[output.html]
+# The book's screenshots have light backgrounds, so default to a light theme to
+# avoid white image boxes on a dark page. preferred-dark-theme is also "light" so
+# a dark-mode browser doesn't auto-flip and re-introduce the clash; readers can
+# still pick a dark theme from the theme menu.
+default-theme = "light"
+preferred-dark-theme = "light"
+git-repository-url = "https://github.com/blckaddr/spring-ai-agent-by-example"
+edit-url-template = "https://github.com/blckaddr/spring-ai-agent-by-example/edit/main/{path}"
+# Project Pages are served under /<repo>/. Change to "/" if you attach a
+# custom domain at the apex (e.g. book.example.com).
+site-url = "/spring-ai-agent-by-example/"
+
+[output.html.search]
+enable = true
