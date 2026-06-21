@@ -89,6 +89,14 @@ The agent now reasons, orchestrates, recovers, remembers, reports its cost, and 
 polling still hides the *process* — you only see the result when it's all over. The original goal
 was to *watch the agent think, live*. That's the finale.
 
+## The code
+
+- [`run/AgentRunner.java`](../agent/src/main/java/com/example/agent/run/AgentRunner.java) — runs the loop detached, with safety caps
+- [`run/RunController.java`](../agent/src/main/java/com/example/agent/run/RunController.java) — `POST /agent/runs`, `GET /agent/runs/{id}`
+- [`run/RunStore.java`](../agent/src/main/java/com/example/agent/run/RunStore.java) · [`RunRecord.java`](../agent/src/main/java/com/example/agent/run/RunRecord.java) · [`RunStatus.java`](../agent/src/main/java/com/example/agent/run/RunStatus.java) — the in-memory run store
+- [`config/AsyncConfig.java`](../agent/src/main/java/com/example/agent/config/AsyncConfig.java) — the background executor
+- [`capture/LoopLimitExceededException.java`](../agent/src/main/java/com/example/agent/capture/LoopLimitExceededException.java) — the max-steps safety cap
+
 ## Try it yourself
 
 Kick off a detached run, get a `runId`, then poll it:
@@ -102,5 +110,7 @@ curl -s localhost:8080/agent/runs/$runId | jq      # repeat until status: DONE
 
 The POST returns instantly (QUEUED/RUNNING); the result waits in the store. The sync
 `/agent/run` still works too.
+
+---
 
 → [Chapter 9 — Watching It Think](09-watching-it-think.md)

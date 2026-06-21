@@ -5,8 +5,8 @@ over **MCP**, built in small phases so you can *see* how an agentic loop actuall
 where it breaks. It runs entirely **locally** on a free model via [Ollama](https://ollama.com); no
 API keys, no cost.
 
-> 📖 **Read the story:** [`book/`](book/README.md) — a 9-chapter narrative of building this, one
-> concept at a time. This README is just how to **run** it.
+> 📖 **Read the story:** [`book/`](book/README.md) — a chapter-by-chapter narrative of building
+> this, one concept at a time (start with its Introduction). This README is just how to **run** it.
 
 ## What's inside
 
@@ -69,33 +69,11 @@ how much the *model* drives reliability:
 AGENT_MODEL=qwen2.5:3b mvn -pl agent spring-boot:run   # weaker — watch it struggle
 ```
 
-## Follow along with the book
-
-The build is **cumulative** — every phase *adds* features and removes none, so the final `main`
-contains **every phase's behavior**. That means:
-
-- **Read the book on `main`** (GitHub renders it); each chapter ends with a **"Try it yourself"**
-  box whose commands all work against `main`.
-- To *see the code as it was* when a concept was introduced, check out its tag (added at release):
-  `git checkout phase-2`, or compare with `git diff phase-1 phase-2`. Switch back with
-  `git checkout main`.
-
-| Tag | Chapter(s) |
-|-----|-----------|
-| `phase-0` | 1–2 |
-| `phase-1` | 3–4 |
-| `phase-2` | 5 |
-| `phase-3` | 6 |
-| `phase-3.5` | 7 |
-| `phase-4` | 8 |
-| `phase-5` | 9 |
-
 ## Repo layout
 
 - [`book/`](book/README.md) — the narrative (read this)
 - [`plans/`](plans/) — the phased build plan
-- [`docs/adr/`](docs/adr/) — architecture decisions · [`docs/architecture/`](docs/architecture/) — how it fits together
-- [`docs/PUBLISHING.md`](docs/PUBLISHING.md) — release/tagging checklist
+- [`docs/adr/`](docs/adr/) — architecture decisions · [`docs/architecture.md`](docs/architecture.md) — how it fits together
 - [`NOTES.md`](NOTES.md) — running lab notebook · [`CLAUDE.md`](CLAUDE.md) — build guidance
 
 ## Configuration knobs (agent)

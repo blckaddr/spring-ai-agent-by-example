@@ -119,14 +119,21 @@ unchanged throughout — stock `qwen2.5:14b`; only its instructions evolved.)*
 The agent now reasons across tools, recovers from failures, remembers conversations, reports its
 cost, runs detached, and can be **watched live as it works.** That was the whole goal.
 
-What's deliberately *not* here is a frontier: planning and multi-agent decomposition (Phase 6) —
-where an agent breaks a goal into sub-tasks or delegates to other agents, and "agent" becomes
-"system." It's noted, not built; the foundation laid here is what you'd build it on.
+That's the **core ladder**, complete. Beyond it lies a frontier — planning and decomposition
+(Phase 6), where the model breaks a goal into sub-tasks and "agent" edges toward "system." The two
+**bonus chapters** that follow explore it: building it (Ch 10), then the trouble a growing toolset
+brings (Ch 11). The foundation laid here is what they build on.
 
 If you've followed from Chapter 1: you didn't just wire up an agent. You watched, at each rung,
 *where the hard parts actually are* — the model's reliability ceiling, the value of a clear error
 message, that memory carries mistakes forward, that the loop is the cost multiplier — and you have
 a glass-box agent you can see straight through.
+
+## The code
+
+- [`chat/AgentStreamController.java`](../agent/src/main/java/com/example/agent/chat/AgentStreamController.java) — `GET /agent/stream` (SSE)
+- [`capture/StepCollector.java`](../agent/src/main/java/com/example/agent/capture/StepCollector.java) — the per-step listener hook
+- [`static/chat.html`](../agent/src/main/resources/static/chat.html) — the live timeline page
 
 ## Try it yourself
 
@@ -135,9 +142,13 @@ Open <http://localhost:8080/chat> and hit **Run** — watch the steps stream in 
 event stream from the terminal:
 
 ```bash
-curl -N "localhost:8080/agent/stream?input=Add%20100%20USD%2C%2050%20EUR%20and%205000%20JPY%20and%20give%20the%20total%20in%20GBP."
+# -G --data-urlencode lets curl encode the query for you, so the text stays readable
+curl -N -G "localhost:8080/agent/stream" \
+  --data-urlencode "input=Add 100 USD, 50 EUR and 5000 JPY and give the total in GBP."
 ```
 
 The events arrive *as the loop runs*, not batched at the end — that's the whole point.
 
-→ *Phase 6 (planning / multi-agent) — frontier, optional, not built.*
+---
+
+→ [Chapter 10 — Watch it Plan](10-watch-it-plan.md)

@@ -39,6 +39,9 @@ the wrong answers taught us the most.
 
 ## Chapters
 
+Start with the [Introduction](00-introduction.md) — why this is different and what you'll come away
+knowing — then the chapters in order:
+
 1. [Setting the Stage](01-setting-the-stage.md) — the goal, the ladder, and a versioning trap
    that nearly bit us before we wrote a line of logic.
 2. [Seeing the Loop](02-seeing-the-loop.md) *(Phase 0)* — the smallest possible agent, and the
@@ -64,14 +67,24 @@ the wrong answers taught us the most.
     third tool domain quietly broke the chat; the experiments that followed (prompt hacks, a bigger
     local model that *still* fabricated the sum, then scope + order) — and what a hosted Claude/Gemini
     would change.
+12. [Epilogue](12-epilogue.md) — the one decision that paid for everything, the lessons that kept
+    recurring, and where the frontier goes next.
 
-## Running it while you read
+## How to read this book
 
-The build is **cumulative** — the final `main` has every phase's features — so every chapter's
-**"Try it yourself"** box works against a single running stack. See the
-[root README](../README.md) to start it (Ollama + three services), then run each chapter's commands
-as you go. To inspect the code as it was at a given phase, check out its tag (e.g.
-`git checkout phase-2`); read the prose here on `main`.
+- **Read the chapters in order, on `main`.** Each is one rung of the ladder and follows the same
+  beat: *What we wanted to learn → What we built → What actually happened → What it taught us.* You
+  can follow the whole story without running anything.
+- **Jump to the code.** Each chapter ends with a **"The code"** list linking that phase's key
+  classes (boilerplate omitted) — read the prose, then click through.
+- **Run it as you go (optional).** The build is **cumulative**, so one running stack serves every
+  chapter's **"Try it yourself"** box. See the [root README](../README.md) to start it
+  (Ollama + four services).
+- **Memory is opt-in.** The chat remembers across turns only when you pass a `sessionId` (that's
+  Chapter 6). The single-shot `curl` examples omit it, so each call is its own fresh, memoryless
+  conversation — re-run any of them as often as you like, in any order. (The `/plan` examples are
+  stateless too.)
+- **Go deeper** via the companion materials below — plans, ADRs, architecture, NOTES.
 
 ## The companion materials
 
@@ -79,7 +92,11 @@ This book is the *story*. The repo also keeps:
 
 - [`plans/`](../plans/) — the phase-by-phase build plan (what we intended to do).
 - [`docs/adr/`](../docs/adr/) — the decisions we made and why (e.g. which framework versions).
-- [`docs/architecture/`](../docs/architecture/) — how the pieces fit together.
+- [`docs/architecture.md`](../docs/architecture.md) — how the pieces fit together.
 - [`NOTES.md`](../NOTES.md) — the running lab notebook (versions, ports, raw observations).
 
 You can read the book alone. The links are there when you want to go deeper.
+
+---
+
+→ Start reading: [Introduction](00-introduction.md)

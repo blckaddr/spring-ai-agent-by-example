@@ -103,6 +103,11 @@ The agent can now hold a conversation. But every loop so far has run *synchronou
 waits, holding the HTTP connection, until the whole thing finishes. Real agent runs can take
 minutes. Next we let the loop run detached.
 
+## The code
+
+- [`config/MemoryConfig.java`](../agent/src/main/java/com/example/agent/config/MemoryConfig.java) — the `ChatMemory` bean
+- [`chat/AgentService.java`](../agent/src/main/java/com/example/agent/chat/AgentService.java) — the `MessageChatMemoryAdvisor`, keyed by sessionId
+
 ## Try it yourself
 
 Two turns, same `sessionId` — the follow-up refers back:
@@ -116,5 +121,7 @@ curl -s localhost:8080/agent/run -H 'Content-Type: application/json' \
 
 The second resolves "that total" from memory. Run the same follow-up with a *different* `sessionId`
 and it won't know what "that" means — memory is keyed per conversation.
+
+---
 
 → [Chapter 7 — What Does It Cost?](07-what-does-it-cost.md)

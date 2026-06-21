@@ -60,10 +60,10 @@ between sessions. (Contract & rules live in [`CLAUDE.md`](CLAUDE.md); the plan i
 | 1 — 2nd MCP + dependent multi-step | ☑ done & verified (structure) | (see git log) | calculator server (:8082, 3 tools) added; agent aggregates both; convert×3→add chain + per-server attribution work. Model threads tool outputs unreliably — see observations. |
 | 2 — failure & recovery | ☑ done & verified | (see git log) | cleaner error capture in RecordingToolCallback; probed unknown-currency failures with qwen2.5:14b — recovers (apologize/list, or substitute+retry), no hallucination; mid-chain failure halts cleanly. Book Ch5. |
 | 3 — memory / multi-turn | ☑ done & verified | (see git log) | MessageChatMemoryAdvisor + MessageWindowChatMemory (in-memory), keyed by sessionId. Turn 2 "that total" resolved from turn 1 via memory; control session had no context (0 steps). Book Ch6. |
-| 3.5 — cost/usage observable | ☑ done & verified | (uncommitted) | Response-level usage in AgentResponse.usage: tokens (final round) + wallClockMs (full run) + $ estimate (Pricing table, $0 local). ChatModel-wrapper approach abandoned (loop runs inside the model). Book Ch7. |
-| 4 — async (202 + runId + poll) | ☑ done & verified (uncommitted) | POST /agent/runs -> 202+runId (detached on ThreadPool executor); in-memory RunStore (QUEUED/RUNNING/DONE/FAILED) persists answer+steps+usage; GET /agent/runs/{id} polls. Sync /agent/run kept. eventId idempotency ✓. Safety caps: max-steps (hard FAILED) ✓, max-wall-clock timeout. Book Ch8. |
-| 5 — streaming live (SSE) | ☑ done & verified (uncommitted) | GET /agent/stream (SseEmitter) pushes each Step live via a step listener on the capture hook; static/index.html (EventSource) renders it. Verified via timestamped curl: events smeared across ~45s as the loop runs (not batched). Book Ch9. |
-| 6 — "Watch it Plan" (optional) | ☑ done & verified (uncommitted) | Plan-ONLY phase (no execution). New 3rd MCP server `mcp-server-feestax` (:8083, transactionFee/taxRate). `ToolCatalog` discovers all servers' tools over MCP; `PlanService` = one tool-less model call → JSON plan graph `{nodes:[{id,specialist,op,summary,inputs}]}`, validated (unique ids, no dangling refs, acyclic/Kahn). `POST /agent/plan` → {graph,catalog,usage}; `/plan` page renders it with vendored Mermaid (subgraph per specialist). Single-agent path untouched. Earlier "team execution" draft reverted (incl. Step.lane). Book Ch10. |
+| 3.5 — cost/usage observable | ☑ done & verified | (see git log) | Response-level usage in AgentResponse.usage: tokens (final round) + wallClockMs (full run) + $ estimate (Pricing table, $0 local). ChatModel-wrapper approach abandoned (loop runs inside the model). Book Ch7. |
+| 4 — async (202 + runId + poll) | ☑ done & verified | (see git log) | POST /agent/runs -> 202+runId (detached on ThreadPool executor); in-memory RunStore (QUEUED/RUNNING/DONE/FAILED) persists answer+steps+usage; GET /agent/runs/{id} polls. Sync /agent/run kept. eventId idempotency ✓. Safety caps: max-steps (hard FAILED) ✓, max-wall-clock timeout. Book Ch8. |
+| 5 — streaming live (SSE) | ☑ done & verified | (see git log) | GET /agent/stream (SseEmitter) pushes each Step live via a step listener on the capture hook; the chat page (EventSource) renders it (static/index.html at Phase 5; later moved to static/chat.html at /chat). Verified via timestamped curl: events smeared across ~45s as the loop runs (not batched). Book Ch9. |
+| 6 — "Watch it Plan" (optional) | ☑ done & verified | (see git log) | Plan-ONLY phase (no execution). New 3rd MCP server `mcp-server-feestax` (:8083, transactionFee/taxRate). `ToolCatalog` discovers all servers' tools over MCP; `PlanService` = one tool-less model call → JSON plan graph `{nodes:[{id,specialist,op,summary,inputs}]}`, validated (unique ids, no dangling refs, acyclic/Kahn). `POST /agent/plan` → {graph,catalog,usage}; `/plan` page renders it with vendored Mermaid (subgraph per specialist). Single-agent path untouched. Earlier "team execution" draft reverted (incl. Step.lane). Book Ch10. |
 
 ## Decisions log
 
@@ -73,11 +73,16 @@ between sessions. (Contract & rules live in [`CLAUDE.md`](CLAUDE.md); the plan i
   the browser. The earlier orchestrator + sub-agents *execution* draft was dropped (the per-task
   sub-agent LLMs were thin one-tool wrappers — pure overhead). Plan file renamed
   `phase-6-multi-agent.md` → `phase-6-watch-it-plan.md`.
+- _(2026-06-21)_ **Memory is opt-in.** `AgentService.run` now mints a fresh `anon-<uuid>` conversation
+  id when no `sessionId` is supplied (was a shared, accumulating `"default"` session). So single-shot
+  chat calls (the book's `curl` examples) are independent and reproducible no matter how often / in
+  what order they run; memory persists only with an explicit `sessionId` (Phase 3 / Ch 6). The UI
+  already sends its own id, so it's unaffected.
 
 ## Open questions / things to confirm with the human
 
-- Exact model tag the human wants to run as the default.
-- _(add as they come up)_
+- _(none open — model default settled: config default `llama3.1:8b`, recommended `qwen2.5:14b`;
+  see the env table above. Add new ones as they come up.)_
 
 ## Observed agent behavior (lessons captured while building)
 

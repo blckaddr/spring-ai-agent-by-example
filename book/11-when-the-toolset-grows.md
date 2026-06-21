@@ -116,6 +116,12 @@ config block away.
 - **Know where your ceiling is.** A small local model is probabilistic at multi-step tool use; you
   mitigate it, or you change the knob that actually moves it — the model.
 
+## The code
+
+- [`chat/AgentService.java`](../agent/src/main/java/com/example/agent/chat/AgentService.java) — the chat toolset whitelist + tool ordering
+- [`application.yml`](../agent/src/main/resources/application.yml) — `agent.chat.tool-servers` (the include-list)
+- See also [ADR-0007](../docs/adr/0007-scope-agent-toolset.md).
+
 ## Try it yourself
 
 See the regression and the fix for yourself by toggling the whitelist (no rebuild — it's config):
@@ -135,3 +141,7 @@ curl -s localhost:8080/agent/run -H 'Content-Type: application/json' \
 Run the scoped version a few times — convert×3 then a single add of the converted values, every
 time. Then widen the toolset and watch the small model wobble. That wobble, and what does and
 doesn't fix it, is the whole chapter.
+
+---
+
+→ [Epilogue — What the Loop Taught Us](12-epilogue.md)

@@ -60,7 +60,8 @@ context-aware (3), persisted (4), then streamed live (5). Don't reinvent it per 
 spring-ai-agent-by-example/   parent POM (multi-module, local git)
 ├── mcp-server-currency/      Spring Boot — streamable-HTTP MCP — convert(), listRates()
 ├── mcp-server-calculator/    Spring Boot — streamable-HTTP MCP — add() (+ subtract/multiply)   [Phase 1]
-└── agent/                    Spring Boot — Ollama ChatClient + MCP client (both servers) + REST
+├── mcp-server-feestax/       Spring Boot — streamable-HTTP MCP — transactionFee(), taxRate()   [Phase 6]
+└── agent/                    Spring Boot — Ollama ChatClient + MCP client (all three servers) + REST/SSE
 ```
 
 ## Git history & publishing
@@ -68,14 +69,12 @@ spring-ai-agent-by-example/   parent POM (multi-module, local git)
 - The project is **born-named** `spring-ai-agent-by-example` — there is deliberately NO rename
   commit in history. Only that name should ever appear; don't reintroduce any earlier working name
   in code, docs, or commits.
-- Branch `backup-pre-rename` preserves the pre-rewrite chain (old name) as a safety net. **Delete
-  it before any GitHub push** (see publishing checklist).
-- **Tags are created last**, on settled history, per [`docs/PUBLISHING.md`](docs/PUBLISHING.md) —
-  not during development (rewrites move SHAs). Track tag intent in that checklist, not SHAs.
+- Already published to GitHub (`origin`); updating is a normal `git push`. No release ceremony.
+- **No per-phase tags.** The book is read on `main` (cumulative build); each chapter links its key
+  classes via its "The code" list. Any leftover `phase-*` tags (local and on the remote) are retired.
 
 ## Pointers
 
 - Plan / phases: [`plans/README.md`](plans/README.md)
 - Running state, decisions, env facts: [`NOTES.md`](NOTES.md)
 - The shareable narrative: [`book/README.md`](book/README.md)
-- Tagging + release steps: [`docs/PUBLISHING.md`](docs/PUBLISHING.md)

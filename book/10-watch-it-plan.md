@@ -6,8 +6,8 @@
 
 For nine chapters the agent was a *reactive loop*: hand it a goal, and it calls one tool, sees the
 result, calls the next, and so on until it's done. That loop is powerful — but it never steps back
-and *designs* an approach. This final chapter asks the one question left on the ladder: can the
-model take a fuzzy goal and produce an explicit **plan** — and can we *see* it?
+and *designs* an approach. This first bonus chapter asks the question the core ladder left open: can
+the model take a fuzzy goal and produce an explicit **plan** — and can we *see* it?
 
 ## What we wanted to learn
 
@@ -129,10 +129,20 @@ on the page and the contrast (a 3-node line vs. a fan-in vs. parallel branches) 
   It makes a real point without pretending a fleet of sub-agents was necessary. That restraint is
   the lesson the earlier, fancier draft couldn't teach.
 
-And there the ladder ends. The obvious next rung — actually *running* the validated graph with a
-dependency-driven executor, the model as planner and plain code as the runtime — is real
-agent-systems territory, and a good place to stop a book about understanding the machinery. We can
-now see the agent loop, watch it think, and watch it plan. That was the whole goal.
+Building this meant standing up a *third* tool server — and that small move had a side effect we
+didn't see coming, which is where the next chapter starts. (The further rung — actually *running*
+the validated graph with a dependency-driven executor, the model as planner and plain code as the
+runtime — is real agent-systems territory, deliberately beyond this build.)
+
+## The code
+
+- [`plan/PlanService.java`](../agent/src/main/java/com/example/agent/plan/PlanService.java) — one tool-less call → validated graph
+- [`plan/PlanController.java`](../agent/src/main/java/com/example/agent/plan/PlanController.java) — `POST /agent/plan`
+- [`plan/PlanGraph.java`](../agent/src/main/java/com/example/agent/plan/PlanGraph.java) · [`PlanResult.java`](../agent/src/main/java/com/example/agent/plan/PlanResult.java) · [`PlanException.java`](../agent/src/main/java/com/example/agent/plan/PlanException.java)
+- [`mcp/ToolCatalog.java`](../agent/src/main/java/com/example/agent/mcp/ToolCatalog.java) — tool discovery for the planner
+- [`config/WebConfig.java`](../agent/src/main/java/com/example/agent/config/WebConfig.java) — serves `/plan` and `/chat`
+- [`mcp-server-feestax/…/FeesTaxService.java`](../mcp-server-feestax/src/main/java/com/example/feestax/FeesTaxService.java) — the 3rd tool server
+- [`static/plan.html`](../agent/src/main/resources/static/plan.html) — the graph board (Mermaid)
 
 ## Try it yourself
 
@@ -170,3 +180,7 @@ curl -s -X POST http://localhost:8080/agent/plan -H 'Content-Type: application/j
 
 Run it a few times and watch the graph change shape — same goal, different plans. That variability,
 laid out as a graph you can actually read, is the thing worth seeing.
+
+---
+
+→ [Chapter 11 — When the Toolset Grows](11-when-the-toolset-grows.md)

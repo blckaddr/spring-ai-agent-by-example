@@ -1,5 +1,6 @@
 package com.example.agent;
 
+import com.example.agent.capture.RecordingToolCallback;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 

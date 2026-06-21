@@ -75,9 +75,12 @@ spring-ai-agent-by-example/     parent POM (multi-module, local git)
 ├── mcp-server-calculator/      Spring Boot — streamable-HTTP MCP   (added Phase 1)
 │     └── add(), maybe subtract()/multiply()
 │
+├── mcp-server-feestax/         Spring Boot — streamable-HTTP MCP   (added Phase 6)
+│     └── transactionFee(), taxRate()
+│
 └── agent/                      Spring Boot — the orchestrator
       ├── Ollama ChatClient
-      ├── MCP client → connects to BOTH mcp servers over streamable HTTP
+      ├── MCP client → connects to all three mcp servers over streamable HTTP
       ├── the agent loop (Spring AI runs the tool-calling loop internally)
       └── REST endpoint(s)
 ```

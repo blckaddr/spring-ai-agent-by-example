@@ -92,6 +92,12 @@ to run it reliably. That's the right footing from which to do the thing we'd bee
 making the agent succeed, and start deliberately making its tools **fail** — to see how the loop
 copes.
 
+## The code
+
+*No code change this chapter — only the model.* The model is a config knob:
+[`application.yml`](../agent/src/main/resources/application.yml) (`spring.ai.ollama.chat.model`, overridable via `AGENT_MODEL`).
+See [ADR-0002](../docs/adr/0002-local-llm-via-ollama.md).
+
 ## Try it yourself
 
 Restart the agent with a weaker model and re-run the Chapter 3 task:
@@ -102,5 +108,7 @@ AGENT_MODEL=llama3.1:8b mvn -pl agent spring-boot:run
 
 Watch the `add` step receive *fabricated* numbers instead of the real conversions. Swap back to
 `AGENT_MODEL=qwen2.5:14b` and it threads them correctly — same code, different brain.
+
+---
 
 → [Chapter 5 — When Tools Fail](05-when-tools-fail.md)

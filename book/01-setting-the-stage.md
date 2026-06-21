@@ -71,8 +71,8 @@ wouldn't re-litigate it, and noted the fallback in case the newness got in the w
 Three small programs, each a normal Spring Boot app:
 
 ```
-agent              (:8080)   the orchestrator — talks to the model, calls tools, exposes a REST API
-mcp-server-currency (:8081)  a tool server — knows how to convert currencies
+agent                 (:8080) the orchestrator — talks to the model, calls tools, exposes a REST API
+mcp-server-currency   (:8081) a tool server — knows how to convert currencies
 mcp-server-calculator (:8082) a tool server — knows how to add/subtract/multiply   (added in Ch.3)
 ```
 
@@ -91,10 +91,18 @@ the interesting parts debuggable later.
 Next: the smallest agent that can possibly work — and the one habit that made every later phase
 legible.
 
+## The code
+
+*No application code this chapter — it's setup and a versioning choice.* See
+[`pom.xml`](../pom.xml) (Spring AI 2.0 / Boot 4, pinned) and
+[ADR-0005](../docs/adr/0005-spring-ai-2-on-boot-4.md).
+
 ## Try it yourself
 
 Nothing to run yet — just get set up: install Java 21 + Maven + [Ollama](https://ollama.com), then
-`ollama pull qwen2.5:14b`, and follow [the README](../README.md) to start the three services. From
+`ollama pull qwen2.5:14b`, and follow [the README](../README.md) to start the four services. From
 the next chapter on, each ends with commands you can run against a live agent.
+
+---
 
 → [Chapter 2 — Seeing the Loop](02-seeing-the-loop.md)

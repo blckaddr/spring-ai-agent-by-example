@@ -102,6 +102,13 @@ And the cost *shape* to keep in mind once it's real money:
 The agent can now reason, orchestrate, recover, remember — and report what it spent. Everything so
 far, though, has made the caller *wait* for the whole loop. Next we let it run detached.
 
+## The code
+
+- [`usage/Pricing.java`](../agent/src/main/java/com/example/agent/usage/Pricing.java) — tokens → $ estimate ($0 local)
+- [`usage/RunUsage.java`](../agent/src/main/java/com/example/agent/usage/RunUsage.java) — the usage / cost record
+- [`chat/AgentService.java`](../agent/src/main/java/com/example/agent/chat/AgentService.java) — reads usage from the final `ChatResponse`
+- [`chat/AgentResponse.java`](../agent/src/main/java/com/example/agent/chat/AgentResponse.java) — carries `usage`
+
 ## Try it yourself
 
 Every run now reports usage — inspect the `usage` block:
@@ -114,5 +121,7 @@ curl -s localhost:8080/agent/run -H 'Content-Type: application/json' \
 
 `$0` locally; `wallClockMs` grows with loop length. Add a row to `Pricing` to estimate a hosted
 model's dollars without changing any other code.
+
+---
 
 → [Chapter 8 — Letting It Run Detached](08-letting-it-run-detached.md)

@@ -49,7 +49,7 @@ is looping.
 
 Your commits use a private email and GitHub's email-privacy protection blocks it. Either set your
 git email to your GitHub **noreply** address (Settings → Emails) and re-commit, or disable the
-protection. See `docs/PUBLISHING.md`.
+protection.
 
 ## `jq: command not found`
 

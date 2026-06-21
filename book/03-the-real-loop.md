@@ -147,6 +147,12 @@ Which leaves an obvious, testable question hanging in the air:
 
 That's the next chapter.
 
+## The code
+
+- [`mcp-server-calculator/…/CalculatorService.java`](../mcp-server-calculator/src/main/java/com/example/calculator/CalculatorService.java) — the second tool server (add/subtract/multiply)
+- [`mcp/McpToolServerIndex.java`](../agent/src/main/java/com/example/agent/mcp/McpToolServerIndex.java) — tool → server attribution (now that there are two servers)
+- [`chat/AgentService.java`](../agent/src/main/java/com/example/agent/chat/AgentService.java) — the system prompt that steers convert→add ordering
+
 ## Try it yourself
 
 ```bash
@@ -156,5 +162,7 @@ curl -s localhost:8080/agent/run -H 'Content-Type: application/json' \
 
 Watch `steps[]`: three `convert` calls (currency-tools) then one `add` (calculator-tools) → 147.09.
 On `qwen2.5:14b` it threads the values; on `llama3.1:8b` it often won't (next chapter).
+
+---
 
 → [Chapter 4 — A Better Brain](04-a-better-brain.md)

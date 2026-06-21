@@ -121,6 +121,11 @@ the right call — partial honesty over confident nonsense.
 We now have an agent that loops, orchestrates across servers, and copes with failure — but it
 still forgets everything the instant a request ends. Next we give it a memory.
 
+## The code
+
+- [`capture/RecordingToolCallback.java`](../agent/src/main/java/com/example/agent/capture/RecordingToolCallback.java) — `cleanError()` extracts the inner tool-failure message
+- [`mcp-server-currency/…/CurrencyService.java`](../mcp-server-currency/src/main/java/com/example/currency/CurrencyService.java) — throws on an unknown currency (the failure we drive)
+
 ## Try it yourself
 
 Ask for a currency the demo server doesn't stock (AUD is a real ISO code, just not in its table):
@@ -132,5 +137,7 @@ curl -s localhost:8080/agent/run -H 'Content-Type: application/json' \
 
 The `convert` step carries an `error`; read how the model recovers — it lists the supported codes
 or substitutes one — instead of inventing a rate.
+
+---
 
 → [Chapter 6 — Giving It Memory](06-giving-it-memory.md)
