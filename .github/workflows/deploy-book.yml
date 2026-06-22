@@ -7,8 +7,8 @@
 name: Deploy book to Pages
 
 on:
-  # Manual-only for now so nothing publishes until you opt in. Once you're happy,
-  # uncomment the push trigger to rebuild on every change to the book.
+  # Manual-only: rebuild on demand from the Actions tab or `gh workflow run`.
+  # To auto-rebuild on every book change, uncomment the push trigger below.
   workflow_dispatch:
   # push:
   #   branches: [main]
@@ -30,7 +30,7 @@ jobs:
     env:
       MDBOOK_VERSION: "0.4.40"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install mdBook
         run: |
@@ -51,7 +51,7 @@ jobs:
         run: mdbook build
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: site
 
@@ -64,4 +64,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
