@@ -5,8 +5,9 @@ over **MCP**, built in small phases so you can *see* how an agentic loop actuall
 where it breaks. It runs entirely **locally** on a free model via [Ollama](https://ollama.com); no
 API keys, no cost.
 
-> 📖 **Read the story:** [`book/`](book/README.md) — a chapter-by-chapter narrative of building
-> this, one concept at a time (start with its Introduction). This README is just how to **run** it.
+> 📖 **Read the book:** **<https://blckaddr.github.io/spring-ai-agent-by-example/>** — a
+> chapter-by-chapter narrative of building this, one concept at a time (start with its
+> Introduction). Source in [`book/`](book/README.md). This README is just how to **run** it.
 
 ## What's inside
 
